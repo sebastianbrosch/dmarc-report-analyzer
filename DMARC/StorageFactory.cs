@@ -14,10 +14,14 @@ public static class StorageFactory
     public static IStorage? Create(IFeedback feedback, System.Data.IDbConnection connection)
     {
         if (feedback is DMARC.V1.Schema.Feedback)
+        {
             return new DMARC.V1.Storage(connection);
+        }
 
         if (feedback is DMARC.V2.Schema.Feedback)
+        {
             return new DMARC.V2.Storage(connection);
+        }
 
         return null;
     }

@@ -54,12 +54,16 @@ public abstract class Storage : IStorage
     protected string GetEnumStringValue(Enum value)
     {
         if (value is null)
+        {
             return string.Empty;
+        }
 
         FieldInfo? fieldInfo = value.GetType().GetField(value.ToString());
 
         if (fieldInfo is null)
+        {
             return value.ToString();
+        }
 
         List<XmlEnumAttribute> enumAttributes = [.. fieldInfo.GetCustomAttributes<XmlEnumAttribute>(true)];
 

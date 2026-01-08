@@ -19,11 +19,10 @@ public class Storage(IDbConnection connection) : DMARC.Storage(connection)
     /// <returns>Status whether the Authentication-Results were stored successfully to the database.</returns>
     private bool SaveAuthResults(string recordId, Schema.AuthResultType? authResults)
     {
-        if (string.IsNullOrWhiteSpace(recordId))
+        if (string.IsNullOrWhiteSpace(recordId) || authResults is null)
+        {
             return false;
-
-        if (authResults is null)
-            return false;
+        }
 
         foreach (Schema.SPFAuthResultType spfAuthResult in authResults.SPF)
         {
@@ -101,12 +100,16 @@ public class Storage(IDbConnection connection) : DMARC.Storage(connection)
     private bool SaveMetadata(string feedbackId, Schema.ReportMetadataType? metadata)
     {
         if (metadata is null)
+        {
             return false;
+        }
 
         int cntReports = Connection.ExecuteScalar<int>("SELECT COUNT(*) FROM metadata WHERE report_id = @ReportId", new { metadata.ReportId });
 
         if (cntReports > 0)
+        {
             return false;
+        }
 
         Database.CreateMetadata(new DMARCReportAnalyzer.Database.DTO.Metadata(
             feedbackId,
@@ -131,11 +134,10 @@ public class Storage(IDbConnection connection) : DMARC.Storage(connection)
     /// <returns>Status whether the evaluated policy was successfully saved to the database.</returns>
     private bool SavePolicyEvaluated(string recordId, Schema.PolicyEvaluatedType? policyEvaluated)
     {
-        if (string.IsNullOrWhiteSpace(recordId))
+        if (string.IsNullOrWhiteSpace(recordId) || policyEvaluated is null)
+        {
             return false;
-
-        if (policyEvaluated is null)
-            return false;
+        }
 
         Database.CreatePolicyEvaluated(new DMARCReportAnalyzer.Database.DTO.PolicyEvaluated(
             recordId,
@@ -194,11 +196,10 @@ public class Storage(IDbConnection connection) : DMARC.Storage(connection)
     /// <returns>Status whether all records of the DMARC report were successfully saved to the database.</returns>
     private bool SaveRecords(string feedbackId, List<Schema.RecordType> records)
     {
-        if (records.Count == 0)
+        if (records.Count == 0 || string.IsNullOrWhiteSpace(feedbackId))
+        {
             return false;
-
-        if (string.IsNullOrWhiteSpace(feedbackId))
-            return false;
+        }
 
         foreach (Schema.RecordType record in records)
         {
