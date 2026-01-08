@@ -1,15 +1,14 @@
-namespace DMARCReportAnalyzer.Decompression
+namespace DMARCReportAnalyzer.Decompression;
+
+/// <summary>
+/// The strategy interface for decompressing a DMARC report archive.
+/// </summary>
+public interface IDecompressReportStrategy
 {
     /// <summary>
-    /// The strategy interface for decompressing a report file.
+    /// Decompressing the DMARC report archive.
     /// </summary>
-    public interface IDecompressReportStrategy
-    {
-        /// <summary>
-        /// Decompressing the report file.
-        /// </summary>
-        /// <param name="path">The path to the compressed report file.</param>
-        /// <returns>The path to the decompressed report file.</returns>
-        public string Decompress(string path);
-    }
+    /// <param name="path">The path to the DMARC report archive.</param>
+    /// <returns>The path to the decompressed DMARC report file.</returns>
+    public string Decompress(string path);
 }
