@@ -1,16 +1,15 @@
 using System.Xml.Serialization;
 
-namespace DMARCReportAnalyzer.DMARC.V1.Schema
+namespace DMARCReportAnalyzer.DMARC.V1.Schema;
+
+/// <summary>
+/// SPF domain scope.
+/// </summary>
+[XmlType("SPFDomainScope")]
+public enum SPFDomainScope
 {
-    /// <summary>
-    /// SPF domain scope.
-    /// </summary>
-    [XmlType("SPFDomainScope")]
-    public enum SPFDomainScope
-    {
-        [XmlEnum("helo")]
-        HELO,
-        [XmlEnum("mfrom")]
-        MailFrom
-    }
+    [XmlEnum("helo")]
+    HELO,
+    [XmlEnum("mfrom")]
+    MailFrom
 }
