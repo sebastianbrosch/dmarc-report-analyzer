@@ -2,6 +2,7 @@ using DMARCReportAnalyzer.Decompression;
 using DMARCReportAnalyzer.DMARC;
 using MailKit.Net.Imap;
 using MimeKit;
+using Serilog;
 using System.Data;
 using System.Xml;
 
@@ -40,8 +41,8 @@ namespace DMARCReportAnalyzer
         /// </summary>
         private void ImportFromMailServer()
         {
-            using ImapClient client = new ImapClient();
-
+            Log.Information("Import in Datenbank '{database}' wurde gestartet.", Connection.ConnectionString);
+            
             bool isNumericPort = int.TryParse(TextBoxPort.Text, out int port);
 
             if (!isNumericPort)
@@ -58,30 +59,49 @@ namespace DMARCReportAnalyzer
                 return;
             }
 
+            using ImapClient client = new ImapClient();
+
             // connect to the mail server to get all messages from inbox.
-            client.Connect(server, port, MailKit.Security.SecureSocketOptions.SslOnConnect);
-            client.Authenticate(username, password);
-            client.Inbox.Open(MailKit.FolderAccess.ReadOnly);
+            try
+            {
+                client.Connect(server, port, MailKit.Security.SecureSocketOptions.SslOnConnect);
+                client.Authenticate(username, password);
+                client.Inbox.Open(MailKit.FolderAccess.ReadOnly);
+                Log.Information("Anmeldung am E-Mail-Postfach erfolgreich.");
+            } catch (Exception e)
+            {
+                Log.Error("Anmeldung am E-Mail-Postfach fehlgeschlagen: {error}", e.Message);
+            }
 
             // get all the mails.
             IList<MailKit.UniqueId> inboxUIds = client.Inbox.Search(MailKit.Search.SearchQuery.All);
+            Log.Information("Es wurden {count} Nachrichten im E-Mail-Postfach gefunden.", inboxUIds.Count);
 
             // process every mail of the inbox.
             foreach (MailKit.UniqueId inboxUId in inboxUIds)
             {
                 MimeMessage message = client.Inbox.GetMessage(inboxUId);
                 List<string> reportPaths = GetReportsFromMessage(message);
-
+                Log.Information("Nachricht mit Betreff '{subject}' vom {datetime} wird verarbeitet.", message.Subject, message.Date);
+                
                 if (reportPaths.Count == 0)
                 {
+                    Log.Warning("Keine Archivdateien für DMARC-Reports gefunden.");
                     continue;
+                } else
+                {
+                    Log.Information("Es wurden {count} Archivdateien für DMARC-Reports gefunden.", reportPaths.Count);
                 }
 
                 foreach (string reportPath in reportPaths)
                 {
                     if (!File.Exists(reportPath))
                     {
+                        Log.Error("Archivdatei konnte nicht gefunden werden: {filepath}", reportPath);
                         continue;
+                    } else
+                    {
+                        Log.Information("Verarbeite Archivdatei: {filepath}", reportPath);
                     }
 
                     DecompressReportContext decompressContext = new();
@@ -95,10 +115,12 @@ namespace DMARCReportAnalyzer
                             decompressContext.SetStrategy(new DecompressReportZIP());
                             break;
                         default:
+                            Log.Warning("Unbekannte Dateiendung: {extension}", Path.GetExtension(reportPath).ToLower());
                             continue;
                     }
 
                     string filePathXml = decompressContext.Decompress(reportPath);
+                    Log.Information("DMARC-Report: {filepath}", filePathXml);
 
                     using (FileStream fileStreamXml = new FileStream(filePathXml, FileMode.Open))
                     {
@@ -109,6 +131,7 @@ namespace DMARCReportAnalyzer
 
                         if (feedback is null)
                         {
+                            Log.Error("Feedback für DMARC-Report konnte nicht ermittelt werden.");
                             continue;
                         }
 
@@ -116,15 +139,25 @@ namespace DMARCReportAnalyzer
 
                         if (storage is null)
                         {
+                            Log.Error("Speicher für DMARC-Report konnte nicht ermittelt werden.");
                             continue;
                         }
 
-                        storage.Save(new Report
+                        bool isSaved = storage.Save(new Report
                         {
                             Document = documentXml,
                             Message = message,
                             Feedback = feedback
                         });
+
+                        if (isSaved)
+                        {
+                            Log.Information("DMARC-Report wurde in der Datenbank gespeichert.");
+                        }
+                        else
+                        {
+                            Log.Error("DMARC-Report konnte nicht in der Datenbank gespeichert werden.");
+                        }
                     }
 
                     File.Delete(filePathXml);

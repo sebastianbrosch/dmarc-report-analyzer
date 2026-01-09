@@ -29,10 +29,10 @@ namespace DMARCReportAnalyzer
         private void InitializeComponent()
         {
             GroupBoxMailServer = new GroupBox();
-            TextBoxServer = new TextBox();
-            TextBoxUsername = new TextBox();
-            TextBoxPassword = new TextBox();
             TextBoxPort = new TextBox();
+            TextBoxPassword = new TextBox();
+            TextBoxUsername = new TextBox();
+            TextBoxServer = new TextBox();
             ButtonImport = new Button();
             GroupBoxMailServer.SuspendLayout();
             SuspendLayout();
@@ -50,21 +50,13 @@ namespace DMARCReportAnalyzer
             GroupBoxMailServer.TabStop = false;
             GroupBoxMailServer.Text = "Mail-Server";
             // 
-            // TextBoxServer
+            // TextBoxPort
             // 
-            TextBoxServer.Location = new Point(6, 22);
-            TextBoxServer.Name = "TextBoxServer";
-            TextBoxServer.PlaceholderText = "Server";
-            TextBoxServer.Size = new Size(193, 23);
-            TextBoxServer.TabIndex = 0;
-            // 
-            // TextBoxUsername
-            // 
-            TextBoxUsername.Location = new Point(6, 51);
-            TextBoxUsername.Name = "TextBoxUsername";
-            TextBoxUsername.PlaceholderText = "Username";
-            TextBoxUsername.Size = new Size(193, 23);
-            TextBoxUsername.TabIndex = 1;
+            TextBoxPort.Location = new Point(205, 22);
+            TextBoxPort.Name = "TextBoxPort";
+            TextBoxPort.PlaceholderText = "Port";
+            TextBoxPort.Size = new Size(50, 23);
+            TextBoxPort.TabIndex = 3;
             // 
             // TextBoxPassword
             // 
@@ -75,13 +67,21 @@ namespace DMARCReportAnalyzer
             TextBoxPassword.TabIndex = 2;
             TextBoxPassword.UseSystemPasswordChar = true;
             // 
-            // TextBoxPort
+            // TextBoxUsername
             // 
-            TextBoxPort.Location = new Point(205, 22);
-            TextBoxPort.Name = "TextBoxPort";
-            TextBoxPort.PlaceholderText = "Port";
-            TextBoxPort.Size = new Size(50, 23);
-            TextBoxPort.TabIndex = 3;
+            TextBoxUsername.Location = new Point(6, 51);
+            TextBoxUsername.Name = "TextBoxUsername";
+            TextBoxUsername.PlaceholderText = "Username";
+            TextBoxUsername.Size = new Size(193, 23);
+            TextBoxUsername.TabIndex = 1;
+            // 
+            // TextBoxServer
+            // 
+            TextBoxServer.Location = new Point(6, 22);
+            TextBoxServer.Name = "TextBoxServer";
+            TextBoxServer.PlaceholderText = "Server";
+            TextBoxServer.Size = new Size(193, 23);
+            TextBoxServer.TabIndex = 0;
             // 
             // ButtonImport
             // 
@@ -97,7 +97,7 @@ namespace DMARCReportAnalyzer
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(286, 160);
+            ClientSize = new Size(286, 161);
             Controls.Add(ButtonImport);
             Controls.Add(GroupBoxMailServer);
             Name = "FormImport";
