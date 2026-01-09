@@ -1,6 +1,8 @@
 using Dapper;
 using System.Data.Common;
 using System.Data.SQLite;
+using System.Diagnostics;
+using System.Xml;
 
 namespace DMARCReportAnalyzer
 {
@@ -84,6 +86,49 @@ namespace DMARCReportAnalyzer
             using (FormImport frmImport = new FormImport(DatabaseConnection))
             {
                 frmImport.ShowDialog(this);
+            }
+        }
+
+        private void ButtonExportXML_Click(object sender, EventArgs e)
+        {
+            if (DatabaseConnection is null)
+            {
+                MessageBox.Show(this, "Es muss eine Datenbank geöffnet sein!", "Export XML", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            string exportFolder = string.Empty;
+
+            using (FolderBrowserDialog dlgSelectFolder = new FolderBrowserDialog())
+            {
+                dlgSelectFolder.Description = "Speicherort für XML-Dokumente";
+                dlgSelectFolder.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+                dlgSelectFolder.Multiselect = false;
+                dlgSelectFolder.ShowHiddenFiles = false;
+                dlgSelectFolder.ShowNewFolderButton = true;
+                dlgSelectFolder.ShowPinnedPlaces = false;
+                dlgSelectFolder.UseDescriptionForTitle = true;
+
+                if (dlgSelectFolder.ShowDialog(this) == DialogResult.OK)
+                {
+                    exportFolder = dlgSelectFolder.SelectedPath;
+                }
+            }
+
+            if (!Directory.Exists(exportFolder))
+            {
+                MessageBox.Show(this, "Das Exportverzeichnis ist nicht vorhanden!", "Export XML", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            var documents = DatabaseConnection.Query("SELECT id, data FROM feedback");
+
+            foreach (var document in documents)
+            {
+                string exportFilePath = Path.Combine(exportFolder, document.id + ".xml");
+                XmlDocument documentXml = new XmlDocument();
+                documentXml.LoadXml(document.data);
+                documentXml.Save(exportFilePath);
             }
         }
     }

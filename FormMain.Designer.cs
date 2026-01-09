@@ -34,6 +34,7 @@ namespace DMARCReportAnalyzer
             NewDatabaseToolStripMenuItem = new ToolStripMenuItem();
             OpenDatabaseToolStripMenuItem = new ToolStripMenuItem();
             importToolStripMenuItem = new ToolStripMenuItem();
+            ButtonExportXML = new Button();
             ((System.ComponentModel.ISupportInitialize)DataGridViewFeedback).BeginInit();
             menuStrip1.SuspendLayout();
             SuspendLayout();
@@ -41,9 +42,9 @@ namespace DMARCReportAnalyzer
             // DataGridViewFeedback
             // 
             DataGridViewFeedback.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            DataGridViewFeedback.Location = new Point(12, 27);
+            DataGridViewFeedback.Location = new Point(12, 56);
             DataGridViewFeedback.Name = "DataGridViewFeedback";
-            DataGridViewFeedback.Size = new Size(776, 411);
+            DataGridViewFeedback.Size = new Size(776, 382);
             DataGridViewFeedback.TabIndex = 5;
             // 
             // menuStrip1
@@ -83,11 +84,22 @@ namespace DMARCReportAnalyzer
             importToolStripMenuItem.Text = "Import";
             importToolStripMenuItem.Click += importToolStripMenuItem_Click;
             // 
+            // ButtonExportXML
+            // 
+            ButtonExportXML.Location = new Point(713, 27);
+            ButtonExportXML.Name = "ButtonExportXML";
+            ButtonExportXML.Size = new Size(75, 23);
+            ButtonExportXML.TabIndex = 7;
+            ButtonExportXML.Text = "Export XML";
+            ButtonExportXML.UseVisualStyleBackColor = true;
+            ButtonExportXML.Click += ButtonExportXML_Click;
+            // 
             // FormMain
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(800, 450);
+            Controls.Add(ButtonExportXML);
             Controls.Add(DataGridViewFeedback);
             Controls.Add(menuStrip1);
             MainMenuStrip = menuStrip1;
@@ -107,5 +119,6 @@ namespace DMARCReportAnalyzer
         private ToolStripMenuItem OpenDatabaseToolStripMenuItem;
         private ToolStripMenuItem NewDatabaseToolStripMenuItem;
         private ToolStripMenuItem importToolStripMenuItem;
+        private Button ButtonExportXML;
     }
 }
