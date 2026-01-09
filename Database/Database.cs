@@ -33,7 +33,7 @@ public class Database
     /// <param name="feedback">An object containing the feedback data to be inserted.</param>
     public void CreateFeedback(DTO.Feedback feedback)
     {
-        this.DbConnection.Execute("INSERT INTO feedback (id, data, created, sender, received, version) VALUES (@Id, @Data, @Created, @Sender, @Received, @Version)", feedback);
+        this.DbConnection.Execute("INSERT INTO feedback (id, data, created, sender, received, message_id, version) VALUES (@Id, @Data, @Created, @Sender, @Received, @MessageId, @Version)", feedback);
     }
 
     /// <summary>
@@ -111,6 +111,7 @@ public class Database
               created DATETIME NOT NULL,
               sender VARCHAR(255) NULL,
               received DATETIME NULL,
+              message_id VARCHAR(255) NULL,
               version VARCHAR(10) NULL,
               PRIMARY KEY (id)
             );

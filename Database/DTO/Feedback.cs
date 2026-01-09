@@ -35,6 +35,11 @@ public record Feedback
     public DateTime? Received { get; init; }
 
     /// <summary>
+    /// Gets the unique identifier of the message.
+    /// </summary>
+    public string? MessageId { get; init; }
+
+    /// <summary>
     /// Gets the version of the feedback.
     /// </summary>
     public string? Version { get; init; }
@@ -47,14 +52,16 @@ public record Feedback
     /// <param name="created">The date and time when the feedback was created in database.</param>
     /// <param name="sender">The sender of the email that sent the DMARC report.</param>
     /// <param name="received">The date and time at which the email was received.</param>
+    /// <param name="messageId">The unique identifier of the message.</param>
     /// <param name="version">The version of the feedback.</param>
-    public Feedback(string id, string data, DateTime created, string? sender, DateTime? received, string? version)
+    public Feedback(string id, string data, DateTime created, string? sender, DateTime? received, string? messageId, string? version)
     {
         this.Id = id;
         this.Data = data;
         this.Created = created;
         this.Sender = sender;
         this.Received = received;
+        this.MessageId = messageId;
         this.Version = version;
     }
 }

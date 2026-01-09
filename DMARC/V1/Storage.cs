@@ -66,16 +66,13 @@ public class Storage(IDbConnection connection) : DMARC.Storage(connection)
 
         string? address = null;
         DateTime? received = null;
+        string? messageId = null;
 
-        if (message is null)
-        {
-            address = null;
-            received = null;
-        }
-        else
+        if (message is not null)
         {
             address = ((MailboxAddress)message.From.First()).Address;
             received = message.Date.DateTime;
+            messageId = message.MessageId;
         }
 
         string version = feedback.Version is null ? string.Empty : feedback.Version.ToString()!.Replace(",", ".");
@@ -86,6 +83,7 @@ public class Storage(IDbConnection connection) : DMARC.Storage(connection)
             DateTime.Now,
             address,
             received,
+            messageId,
             version
         ));
 
