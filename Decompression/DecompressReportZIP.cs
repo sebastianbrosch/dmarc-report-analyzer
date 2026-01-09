@@ -33,7 +33,7 @@ public class DecompressReportZIP : IDecompressReportStrategy
             return string.Empty;
         }
 
-        string uncompressedPath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+        string uncompressedPath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName() + ".xml");
         zipArchive.Entries[0].ExtractToFile(uncompressedPath);
         return uncompressedPath;
     }

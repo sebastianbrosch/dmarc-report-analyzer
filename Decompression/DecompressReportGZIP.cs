@@ -27,7 +27,7 @@ public class DecompressReportGZIP : IDecompressReportStrategy
         }
 
         using FileStream fileStream = fileInfo.OpenRead();
-        string uncompressedPath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+        string uncompressedPath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName() + ".xml");
 
         using FileStream uncompressedFileStream = File.Create(uncompressedPath);
         using (GZipStream gzipStream = new(fileStream, CompressionMode.Decompress))
