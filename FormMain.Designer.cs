@@ -35,6 +35,7 @@ namespace DMARCReportAnalyzer
             OpenDatabaseToolStripMenuItem = new ToolStripMenuItem();
             importToolStripMenuItem = new ToolStripMenuItem();
             ButtonExportXML = new Button();
+            ButtonImportXML = new Button();
             ((System.ComponentModel.ISupportInitialize)DataGridViewFeedback).BeginInit();
             menuStrip1.SuspendLayout();
             SuspendLayout();
@@ -94,11 +95,22 @@ namespace DMARCReportAnalyzer
             ButtonExportXML.UseVisualStyleBackColor = true;
             ButtonExportXML.Click += ButtonExportXML_Click;
             // 
+            // ButtonImportXML
+            // 
+            ButtonImportXML.Location = new Point(627, 27);
+            ButtonImportXML.Name = "ButtonImportXML";
+            ButtonImportXML.Size = new Size(80, 23);
+            ButtonImportXML.TabIndex = 8;
+            ButtonImportXML.Text = "Import XML";
+            ButtonImportXML.UseVisualStyleBackColor = true;
+            ButtonImportXML.Click += ButtonImportXML_Click;
+            // 
             // FormMain
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(800, 450);
+            Controls.Add(ButtonImportXML);
             Controls.Add(ButtonExportXML);
             Controls.Add(DataGridViewFeedback);
             Controls.Add(menuStrip1);
@@ -120,5 +132,6 @@ namespace DMARCReportAnalyzer
         private ToolStripMenuItem NewDatabaseToolStripMenuItem;
         private ToolStripMenuItem importToolStripMenuItem;
         private Button ButtonExportXML;
+        private Button ButtonImportXML;
     }
 }

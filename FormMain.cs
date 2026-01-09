@@ -1,7 +1,7 @@
 using Dapper;
+using DMARCReportAnalyzer.DMARC;
 using System.Data.Common;
 using System.Data.SQLite;
-using System.Diagnostics;
 using System.Xml;
 
 namespace DMARCReportAnalyzer
@@ -129,6 +129,68 @@ namespace DMARCReportAnalyzer
                 XmlDocument documentXml = new XmlDocument();
                 documentXml.LoadXml(document.data);
                 documentXml.Save(exportFilePath);
+            }
+        }
+
+        private void ButtonImportXML_Click(object sender, EventArgs e)
+        {
+            if (DatabaseConnection is null)
+            {
+                MessageBox.Show(this, "Es muss eine Datenbank geöffnet sein!", "Import XML", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            string importFolder = string.Empty;
+
+            using (FolderBrowserDialog dlgSelectFolder = new FolderBrowserDialog())
+            {
+                dlgSelectFolder.Description = "Speicherort für XML-Dokumente";
+                dlgSelectFolder.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+                dlgSelectFolder.Multiselect = false;
+                dlgSelectFolder.ShowHiddenFiles = false;
+                dlgSelectFolder.ShowNewFolderButton = true;
+                dlgSelectFolder.ShowPinnedPlaces = false;
+                dlgSelectFolder.UseDescriptionForTitle = true;
+
+                if (dlgSelectFolder.ShowDialog(this) == DialogResult.OK)
+                {
+                    importFolder = dlgSelectFolder.SelectedPath;
+                }
+            }
+
+            if (!Directory.Exists(importFolder))
+            {
+                MessageBox.Show(this, "Das Importverzeichnis ist nicht vorhanden!", "Import XML", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            List<string> txtFiles = [.. Directory.EnumerateFiles(importFolder, "*.xml", SearchOption.TopDirectoryOnly)];
+
+            foreach (string currentFile in txtFiles)
+            {
+                XmlDocument document = new XmlDocument();
+                document.Load(currentFile);
+
+                IFeedback? feedback = FeedbackFactory.Create(document);
+
+                if (feedback is null)
+                {
+                    continue;
+                }
+
+                IStorage? storage = StorageFactory.Create(feedback, DatabaseConnection);
+
+                if (storage is null)
+                {
+                    continue;
+                }
+
+                storage.Save(new Report
+                {
+                    Document = document,
+                    Message = null,
+                    Feedback = feedback
+                });
             }
         }
     }

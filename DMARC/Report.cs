@@ -18,5 +18,5 @@ public struct Report
     /// <summary>
     /// The email message with which the DMARC report was received.
     /// </summary>
-    public MimeKit.MimeMessage Message;
+    public MimeKit.MimeMessage? Message;
 }
