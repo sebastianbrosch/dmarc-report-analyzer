@@ -243,7 +243,7 @@ public class Storage(IDbConnection connection) : DMARC.Storage(connection)
         string feedbackId = this.GetGUID();
         Schema.Feedback feedback = (Schema.Feedback)report.Feedback;
         XmlDocument documentXml = report.Document;
-        MimeKit.MimeMessage message = report.Message;
+        MimeKit.MimeMessage? message = report.Message;
 
         using IDbTransaction transaction = Connection.BeginTransaction();
 
