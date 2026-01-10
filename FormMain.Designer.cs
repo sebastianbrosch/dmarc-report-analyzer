@@ -28,34 +28,57 @@ namespace DMARCReportAnalyzer
         /// </summary>
         private void InitializeComponent()
         {
-            DataGridViewFeedback = new DataGridView();
-            menuStrip1 = new MenuStrip();
+            DataGridViewSenderOverview = new DataGridView();
+            dgvSenderOverview_SourceIp = new DataGridViewTextBoxColumn();
+            dgvSenderOverview_MessageCount = new DataGridViewTextBoxColumn();
+            MenuStripMain = new MenuStrip();
             datenbankToolStripMenuItem = new ToolStripMenuItem();
             NewDatabaseToolStripMenuItem = new ToolStripMenuItem();
             OpenDatabaseToolStripMenuItem = new ToolStripMenuItem();
             importToolStripMenuItem = new ToolStripMenuItem();
             ButtonExportXML = new Button();
             ButtonImportXML = new Button();
-            ((System.ComponentModel.ISupportInitialize)DataGridViewFeedback).BeginInit();
-            menuStrip1.SuspendLayout();
+            StatusStripMain = new StatusStrip();
+            ToolStripStatusLabelReportCount = new ToolStripStatusLabel();
+            ToolStripStatusLabelDatabaseName = new ToolStripStatusLabel();
+            ((System.ComponentModel.ISupportInitialize)DataGridViewSenderOverview).BeginInit();
+            MenuStripMain.SuspendLayout();
+            StatusStripMain.SuspendLayout();
             SuspendLayout();
             // 
-            // DataGridViewFeedback
+            // DataGridViewSenderOverview
             // 
-            DataGridViewFeedback.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            DataGridViewFeedback.Location = new Point(12, 56);
-            DataGridViewFeedback.Name = "DataGridViewFeedback";
-            DataGridViewFeedback.Size = new Size(776, 382);
-            DataGridViewFeedback.TabIndex = 5;
+            DataGridViewSenderOverview.AllowUserToAddRows = false;
+            DataGridViewSenderOverview.AllowUserToDeleteRows = false;
+            DataGridViewSenderOverview.AllowUserToResizeRows = false;
+            DataGridViewSenderOverview.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            DataGridViewSenderOverview.Columns.AddRange(new DataGridViewColumn[] { dgvSenderOverview_SourceIp, dgvSenderOverview_MessageCount });
+            DataGridViewSenderOverview.Location = new Point(12, 56);
+            DataGridViewSenderOverview.Name = "DataGridViewSenderOverview";
+            DataGridViewSenderOverview.RowHeadersVisible = false;
+            DataGridViewSenderOverview.Size = new Size(357, 382);
+            DataGridViewSenderOverview.TabIndex = 5;
             // 
-            // menuStrip1
+            // dgvSenderOverview_SourceIp
             // 
-            menuStrip1.Items.AddRange(new ToolStripItem[] { datenbankToolStripMenuItem, importToolStripMenuItem });
-            menuStrip1.Location = new Point(0, 0);
-            menuStrip1.Name = "menuStrip1";
-            menuStrip1.Size = new Size(800, 24);
-            menuStrip1.TabIndex = 6;
-            menuStrip1.Text = "menuStrip1";
+            dgvSenderOverview_SourceIp.DataPropertyName = "source_ip";
+            dgvSenderOverview_SourceIp.HeaderText = "IP";
+            dgvSenderOverview_SourceIp.Name = "dgvSenderOverview_SourceIp";
+            dgvSenderOverview_SourceIp.Width = 200;
+            // 
+            // dgvSenderOverview_MessageCount
+            // 
+            dgvSenderOverview_MessageCount.DataPropertyName = "message_count";
+            dgvSenderOverview_MessageCount.HeaderText = "Messages";
+            dgvSenderOverview_MessageCount.Name = "dgvSenderOverview_MessageCount";
+            // 
+            // MenuStripMain
+            // 
+            MenuStripMain.Items.AddRange(new ToolStripItem[] { datenbankToolStripMenuItem, importToolStripMenuItem });
+            MenuStripMain.Location = new Point(0, 0);
+            MenuStripMain.Name = "MenuStripMain";
+            MenuStripMain.Size = new Size(800, 24);
+            MenuStripMain.TabIndex = 6;
             // 
             // datenbankToolStripMenuItem
             // 
@@ -105,33 +128,63 @@ namespace DMARCReportAnalyzer
             ButtonImportXML.UseVisualStyleBackColor = true;
             ButtonImportXML.Click += ButtonImportXML_Click;
             // 
+            // StatusStripMain
+            // 
+            StatusStripMain.Items.AddRange(new ToolStripItem[] { ToolStripStatusLabelDatabaseName, ToolStripStatusLabelReportCount });
+            StatusStripMain.Location = new Point(0, 473);
+            StatusStripMain.Name = "StatusStripMain";
+            StatusStripMain.Size = new Size(800, 24);
+            StatusStripMain.TabIndex = 9;
+            StatusStripMain.Text = "statusStrip1";
+            // 
+            // ToolStripStatusLabelReportCount
+            // 
+            ToolStripStatusLabelReportCount.Name = "ToolStripStatusLabelReportCount";
+            ToolStripStatusLabelReportCount.Size = new Size(78, 19);
+            ToolStripStatusLabelReportCount.Text = "Report Count";
+            // 
+            // ToolStripStatusLabelDatabaseName
+            // 
+            ToolStripStatusLabelDatabaseName.BorderSides = ToolStripStatusLabelBorderSides.Right;
+            ToolStripStatusLabelDatabaseName.Name = "ToolStripStatusLabelDatabaseName";
+            ToolStripStatusLabelDatabaseName.Size = new Size(59, 19);
+            ToolStripStatusLabelDatabaseName.Text = "Database";
+            // 
             // FormMain
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(800, 450);
+            ClientSize = new Size(800, 497);
+            Controls.Add(StatusStripMain);
             Controls.Add(ButtonImportXML);
             Controls.Add(ButtonExportXML);
-            Controls.Add(DataGridViewFeedback);
-            Controls.Add(menuStrip1);
-            MainMenuStrip = menuStrip1;
+            Controls.Add(DataGridViewSenderOverview);
+            Controls.Add(MenuStripMain);
+            MainMenuStrip = MenuStripMain;
             Name = "FormMain";
             Text = "DMARC Report Analyzer";
-            ((System.ComponentModel.ISupportInitialize)DataGridViewFeedback).EndInit();
-            menuStrip1.ResumeLayout(false);
-            menuStrip1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)DataGridViewSenderOverview).EndInit();
+            MenuStripMain.ResumeLayout(false);
+            MenuStripMain.PerformLayout();
+            StatusStripMain.ResumeLayout(false);
+            StatusStripMain.PerformLayout();
             ResumeLayout(false);
             PerformLayout();
         }
 
         #endregion
-        private DataGridView DataGridViewFeedback;
-        private MenuStrip menuStrip1;
+        private DataGridView DataGridViewSenderOverview;
+        private MenuStrip MenuStripMain;
         private ToolStripMenuItem datenbankToolStripMenuItem;
         private ToolStripMenuItem OpenDatabaseToolStripMenuItem;
         private ToolStripMenuItem NewDatabaseToolStripMenuItem;
         private ToolStripMenuItem importToolStripMenuItem;
         private Button ButtonExportXML;
         private Button ButtonImportXML;
+        private DataGridViewTextBoxColumn dgvSenderOverview_SourceIp;
+        private DataGridViewTextBoxColumn dgvSenderOverview_MessageCount;
+        private StatusStrip StatusStripMain;
+        private ToolStripStatusLabel ToolStripStatusLabelReportCount;
+        private ToolStripStatusLabel ToolStripStatusLabelDatabaseName;
     }
 }

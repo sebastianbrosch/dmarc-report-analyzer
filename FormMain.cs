@@ -1,5 +1,6 @@
 using Dapper;
 using DMARCReportAnalyzer.DMARC;
+using System.Data;
 using System.Data.Common;
 using System.Data.SQLite;
 using System.Xml;
@@ -13,6 +14,10 @@ namespace DMARCReportAnalyzer
         public FormMain()
         {
             InitializeComponent();
+            ToolStripStatusLabelReportCount.Visible = false;
+            ToolStripStatusLabelDatabaseName.Visible = false;
+            ToolStripStatusLabelDatabaseName.Text = string.Empty;
+            ToolStripStatusLabelReportCount.Text = string.Empty;
         }
 
         private void OpenDatabaseToolStripMenuItem_Click(object sender, EventArgs e)
@@ -39,6 +44,8 @@ namespace DMARCReportAnalyzer
                     DatabaseConnection.Open();
                 }
             }
+
+            LoadDatabase();
         }
 
         private void NewDatabaseToolStripMenuItem_Click(object sender, EventArgs e)
@@ -73,6 +80,39 @@ namespace DMARCReportAnalyzer
                     database.InitializeDatabase();
                 }
             }
+
+            LoadDatabase();
+        }
+
+        private void LoadDatabase()
+        {
+            if (DatabaseConnection is null)
+            {
+                return;
+            }
+
+            DataSet dsSenderOverview = new DataSet();
+            dsSenderOverview.EnforceConstraints = false;
+            DataTable dtSenderOverview = dsSenderOverview.Tables.Add("senders");
+            
+            IDataReader reader = DatabaseConnection.ExecuteReader("SELECT source_ip, SUM(r.count) message_count FROM record r GROUP BY source_ip");
+            dtSenderOverview.Load(reader);
+
+            DataGridViewSenderOverview.AutoGenerateColumns = false;
+            DataGridViewSenderOverview.ReadOnly = true;
+            DataGridViewSenderOverview.DataSource = dtSenderOverview;
+            DataGridViewSenderOverview.Sort(dgvSenderOverview_MessageCount, System.ComponentModel.ListSortDirection.Descending);
+
+            int reportCount = DatabaseConnection.QuerySingleOrDefault<int>("SELECT COUNT(id) FROM feedback");
+            ToolStripStatusLabelReportCount.Text = reportCount + " Reports";
+
+            StatusStripMain.ShowItemToolTips = true;
+            string databaseFilePath = ((SQLiteConnection)DatabaseConnection).FileName;
+            ToolStripStatusLabelDatabaseName.Text = Path.GetFileName(databaseFilePath);
+            ToolStripStatusLabelDatabaseName.ToolTipText = databaseFilePath;
+
+            ToolStripStatusLabelReportCount.Visible = true;
+            ToolStripStatusLabelDatabaseName.Visible = true;
         }
 
         private void importToolStripMenuItem_Click(object sender, EventArgs e)
