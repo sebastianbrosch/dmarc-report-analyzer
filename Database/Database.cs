@@ -96,7 +96,7 @@ public class Database
     /// <param name="reason">An object containing the reason data to be inserted.</param>
     public void CreateReason(DTO.Reason reason)
     {
-        this.DbConnection.Execute("INSERT INTO reason (record_id, type, comment) VALUES (@FeedbackId, @Type, @Comment)", reason);
+        this.DbConnection.Execute("INSERT INTO reason (record_id, type, comment) VALUES (@RecordId, @Type, @Comment)", reason);
     }
 
     /// <summary>
@@ -146,7 +146,7 @@ public class Database
             CREATE TABLE IF NOT EXISTS record (
               id VARCHAR(32) NOT NULL,
               feedback_id VARCHAR(32) NOT NULL,
-              source_ip VARCHAR(15) NOT NULL,
+              source_ip VARCHAR(39) NOT NULL,
               count INTEGER NOT NULL,
               envelope_to VARCHAR(255) NULL,
               envelope_from VARCHAR(255) NULL,
