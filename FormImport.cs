@@ -6,214 +6,218 @@ using Serilog;
 using System.Data;
 using System.Xml;
 
-namespace DMARCReportAnalyzer
+namespace DMARCReportAnalyzer;
+
+/// <summary>
+/// Form to import DMARC reports to the database.
+/// </summary>
+public partial class FormImport : Form
 {
     /// <summary>
-    /// Form to import DMARC reports to the database.
+    /// The database connection.
     /// </summary>
-    public partial class FormImport : Form
+    private readonly IDbConnection Connection;
+    
+    /// <summary>
+    /// Constructor to initialize this form to import DMARC reports.
+    /// </summary>
+    /// <param name="connection">The database connection.</param>
+    public FormImport(IDbConnection connection)
     {
-        /// <summary>
-        /// The database connection.
-        /// </summary>
-        private readonly IDbConnection Connection;
+        InitializeComponent();
+        Connection = connection;
+    }
+
+    /// <summary>
+    /// Button to start the import of DMARC reports.
+    /// </summary>
+    private void ButtonImport_Click(object sender, EventArgs e)
+    {
+        ImportFromMailServer();
+    }
+
+    /// <summary>
+    /// Imports DMARC reports from a mail server.
+    /// </summary>
+    private void ImportFromMailServer()
+    {
+        Log.Information("Datenbank: {database}", Connection.ConnectionString);
+        Log.Information("Import Beginn: {date}", DateTime.Now);
         
-        /// <summary>
-        /// Constructor to initialize this form to import DMARC reports.
-        /// </summary>
-        /// <param name="connection">The database connection.</param>
-        public FormImport(IDbConnection connection)
+        bool isNumericPort = int.TryParse(TextBoxPort.Text, out int port);
+
+        if (!isNumericPort)
         {
-            InitializeComponent();
-            Connection = connection;
+            return;
         }
 
-        /// <summary>
-        /// Button to start the import of DMARC reports.
-        /// </summary>
-        private void ButtonImport_Click(object sender, EventArgs e)
+        string server = TextBoxServer.Text;
+        string username = TextBoxUsername.Text;
+        string password = TextBoxPassword.Text;
+
+        if (string.IsNullOrWhiteSpace(server) || string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
         {
-            ImportFromMailServer();
+            return;
         }
 
-        /// <summary>
-        /// Imports DMARC reports from a mail server.
-        /// </summary>
-        private void ImportFromMailServer()
+        using ImapClient client = new ImapClient();
+
+        // connect to the mail server to get all messages from inbox.
+        try
         {
-            Log.Information("Datenbank: {database}", Connection.ConnectionString);
-            Log.Information("Import Beginn: {date}", DateTime.Now);
+            client.Connect(server, port, MailKit.Security.SecureSocketOptions.SslOnConnect);
+            client.Authenticate(username, password);
+            client.Inbox.Open(MailKit.FolderAccess.ReadOnly);
+            Log.Information("Anmeldung am Postfach erfolgreich.");
+        } catch (Exception e)
+        {
+            MessageBox.Show(this, "Anmeldung am Postfach fehlgeschlagen: " + e.Message, "Anmeldung am Postfach", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            Log.Error("Anmeldung am Postfach fehlgeschlagen: {error}", e.Message);
+            return;
+        }
+
+        // get all the mails.
+        IList<MailKit.UniqueId> inboxUIds = client.Inbox.Search(MailKit.Search.SearchQuery.All);
+        Log.Information("Anzahl der E-Mails: {count}", inboxUIds.Count);
+
+        // process every mail of the inbox.
+        foreach (MailKit.UniqueId inboxUId in inboxUIds)
+        {
+            MimeMessage message = client.Inbox.GetMessage(inboxUId);
+
+            if (message is null)
+            {
+                Log.Error("Nachricht konnte nicht ermittelt werden.");
+                continue;
+            }
+
+            List<string> reportPaths = GetReportsFromMessage(message);
+            Log.Information("Aktuelle Nachricht: {@message}", new { message.Subject, message.Date, message.MessageId });
+            Log.Information("Anzahl der Archivdateien für DMARC-Reports: {count}", reportPaths.Count);
+
+            if (reportPaths.Count == 0)
+            {
+                Log.Warning("Keine Archivdateien mit DMARC-Reports gefunden.");
+                continue;
+            }
+
+            foreach (string reportPath in reportPaths)
+            {
+                if (!File.Exists(reportPath))
+                {
+                    Log.Error("Archivdatei nicht gefunden: {path}", reportPath);
+                    continue;
+                }
             
-            bool isNumericPort = int.TryParse(TextBoxPort.Text, out int port);
+                Log.Information("Archivdatei: {path}", reportPath);
+                
+                DecompressReportContext decompressContext = new();
 
-            if (!isNumericPort)
-            {
-                return;
-            }
-
-            string server = TextBoxServer.Text;
-            string username = TextBoxUsername.Text;
-            string password = TextBoxPassword.Text;
-
-            if (string.IsNullOrWhiteSpace(server) || string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
-            {
-                return;
-            }
-
-            using ImapClient client = new ImapClient();
-
-            // connect to the mail server to get all messages from inbox.
-            try
-            {
-                client.Connect(server, port, MailKit.Security.SecureSocketOptions.SslOnConnect);
-                client.Authenticate(username, password);
-                client.Inbox.Open(MailKit.FolderAccess.ReadOnly);
-                Log.Information("Anmeldung am Postfach erfolgreich.");
-            } catch (Exception e)
-            {
-                MessageBox.Show(this, "Anmeldung am Postfach fehlgeschlagen: " + e.Message, "Anmeldung am Postfach", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                Log.Error("Anmeldung am Postfach fehlgeschlagen: {error}", e.Message);
-                return;
-            }
-
-            // get all the mails.
-            IList<MailKit.UniqueId> inboxUIds = client.Inbox.Search(MailKit.Search.SearchQuery.All);
-            Log.Information("Anzahl der E-Mails: {count}", inboxUIds.Count);
-
-            // process every mail of the inbox.
-            foreach (MailKit.UniqueId inboxUId in inboxUIds)
-            {
-                MimeMessage message = client.Inbox.GetMessage(inboxUId);
-
-                if (message is null)
+                switch (Path.GetExtension(reportPath).ToLower())
                 {
-                    Log.Error("Nachricht konnte nicht ermittelt werden.");
-                    continue;
+                    case ".gz":
+                        decompressContext.SetStrategy(new DecompressReportGZIP());
+                        break;
+                    case ".zip":
+                        decompressContext.SetStrategy(new DecompressReportZIP());
+                        break;
+                    default:
+                        Log.Warning("Unbekannte Dateiendung: {extension}", Path.GetExtension(reportPath).ToLower());
+                        continue;
                 }
 
-                List<string> reportPaths = GetReportsFromMessage(message);
-                Log.Information("Aktuelle Nachricht: {@message}", new { message.Subject, message.Date, message.MessageId });
-                Log.Information("Anzahl der Archivdateien für DMARC-Reports: {count}", reportPaths.Count);
+                string filePathXml = decompressContext.Decompress(reportPath);
+                Log.Information("DMARC-Report: {path}", filePathXml);
 
-                if (reportPaths.Count == 0)
+                using (FileStream fileStreamXml = new FileStream(filePathXml, FileMode.Open))
                 {
-                    Log.Warning("Keine Archivdateien mit DMARC-Reports gefunden.");
-                    continue;
-                }
+                    XmlDocument documentXml = new XmlDocument();
+                    documentXml.Load(fileStreamXml);
 
-                foreach (string reportPath in reportPaths)
-                {
-                    if (!File.Exists(reportPath))
+                    IFeedback? feedback = FeedbackFactory.Create(documentXml);
+
+                    if (feedback is null)
                     {
-                        Log.Error("Archivdatei nicht gefunden: {path}", reportPath);
+                        Log.Error("Feedback des DMARC-Reports konnte nicht ermittelt werden.");
                         continue;
                     }
-                
-                    Log.Information("Archivdatei: {path}", reportPath);
-                    
-                    DecompressReportContext decompressContext = new();
 
-                    switch (Path.GetExtension(reportPath).ToLower())
+                    IStorage? storage = StorageFactory.Create(feedback, Connection);
+
+                    if (storage is null)
                     {
-                        case ".gz":
-                            decompressContext.SetStrategy(new DecompressReportGZIP());
-                            break;
-                        case ".zip":
-                            decompressContext.SetStrategy(new DecompressReportZIP());
-                            break;
-                        default:
-                            Log.Warning("Unbekannte Dateiendung: {extension}", Path.GetExtension(reportPath).ToLower());
-                            continue;
+                        Log.Error("Speicher für das Feedback des DMARC-Reports konnte nicht ermittelt werden.");
+                        continue;
                     }
 
-                    string filePathXml = decompressContext.Decompress(reportPath);
-                    Log.Information("DMARC-Report: {path}", filePathXml);
-
-                    using (FileStream fileStreamXml = new FileStream(filePathXml, FileMode.Open))
+                    bool isSaved = storage.Save(new Report
                     {
-                        XmlDocument documentXml = new XmlDocument();
-                        documentXml.Load(fileStreamXml);
+                        Document = documentXml,
+                        Message = message,
+                        Feedback = feedback
+                    });
 
-                        IFeedback? feedback = FeedbackFactory.Create(documentXml);
-
-                        if (feedback is null)
-                        {
-                            Log.Error("Feedback des DMARC-Reports konnte nicht ermittelt werden.");
-                            continue;
-                        }
-
-                        IStorage? storage = StorageFactory.Create(feedback, Connection);
-
-                        if (storage is null)
-                        {
-                            Log.Error("Speicher für das Feedback des DMARC-Reports konnte nicht ermittelt werden.");
-                            continue;
-                        }
-
-                        bool isSaved = storage.Save(new Report
-                        {
-                            Document = documentXml,
-                            Message = message,
-                            Feedback = feedback
-                        });
-
-                        if (isSaved)
-                        {
-                            Log.Information("DMARC-Report wurde in der Datenbank gespeichert.");
-                        }
-                        else
-                        {
-                            Log.Error("DMARC-Report konnte nicht in der Datenbank gespeichert werden.");
-                        }
+                    if (isSaved)
+                    {
+                        Log.Information("DMARC-Report wurde in der Datenbank gespeichert.");
                     }
-
-                    Log.Information("Lösche temporäre Dateien.");
-                    File.Delete(filePathXml);
-                    File.Delete(reportPath);
+                    else
+                    {
+                        Log.Error("DMARC-Report konnte nicht in der Datenbank gespeichert werden.");
+                    }
                 }
-            }
 
-            Log.Information("Import Ende: {date}", DateTime.Now);
-            MessageBox.Show(this, "Import abgeschlossen.", "Import", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                Log.Information("Lösche temporäre Dateien.");
+                File.Delete(filePathXml);
+                File.Delete(reportPath);
+            }
         }
 
-        private List<string> GetReportsFromMessage(MimeMessage message)
+        Log.Information("Import Ende: {date}", DateTime.Now);
+        MessageBox.Show(this, "Import abgeschlossen.", "Import", MessageBoxButtons.OK, MessageBoxIcon.Information);
+    }
+
+    private bool IsDMARCSubject(string subject)
+    {
+        return subject.Contains("Submitter", StringComparison.InvariantCultureIgnoreCase) && subject.Contains("Report-ID", StringComparison.InvariantCultureIgnoreCase);
+    }
+
+    private List<string> GetReportsFromMessage(MimeMessage message)
+    {
+        List<string> reports = new List<string>();
+        
+        if (!IsDMARCSubject(message.Subject))
         {
-            List<string> reports = new List<string>();
-            
-            if (!(message.Subject.Contains("Submitter", StringComparison.InvariantCultureIgnoreCase) && message.Subject.Contains("Report-ID", StringComparison.InvariantCultureIgnoreCase)))
-            {
-                return [];
-            }
-
-            foreach (MimePart attachment in message.Attachments)
-            {
-                if (attachment.ContentType.IsMimeType("application", "gzip"))
-                {
-                    string reportFilePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName() + ".gz");
-                    Directory.CreateDirectory(Path.GetDirectoryName(reportFilePath)!);
-
-                    using (FileStream reportFileStream = File.Create(reportFilePath))
-                    {
-                        attachment.Content.DecodeTo(reportFileStream);
-                    }
-
-                    reports.Add(reportFilePath);
-                } else if (attachment.ContentType.IsMimeType("application", "zip"))
-                {
-                    string reportFilePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName() + ".zip");
-                    Directory.CreateDirectory(Path.GetDirectoryName(reportFilePath)!);
-
-                    using (FileStream reportFileStream = File.Create(reportFilePath))
-                    {
-                        attachment.Content.DecodeTo(reportFileStream);
-                    }
-
-                    reports.Add(reportFilePath);
-                }
-            }
-
-            return reports;
+            return [];
         }
+
+        foreach (MimePart attachment in message.Attachments)
+        {
+            if (attachment.ContentType.IsMimeType("application", "gzip"))
+            {
+                string reportFilePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName() + ".gz");
+                Directory.CreateDirectory(Path.GetDirectoryName(reportFilePath)!);
+
+                using (FileStream reportFileStream = File.Create(reportFilePath))
+                {
+                    attachment.Content.DecodeTo(reportFileStream);
+                }
+
+                reports.Add(reportFilePath);
+            } else if (attachment.ContentType.IsMimeType("application", "zip"))
+            {
+                string reportFilePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName() + ".zip");
+                Directory.CreateDirectory(Path.GetDirectoryName(reportFilePath)!);
+
+                using (FileStream reportFileStream = File.Create(reportFilePath))
+                {
+                    attachment.Content.DecodeTo(reportFileStream);
+                }
+
+                reports.Add(reportFilePath);
+            }
+        }
+
+        return reports;
     }
 }

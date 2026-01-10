@@ -39,8 +39,13 @@ namespace DMARCReportAnalyzer
             ButtonExportXML = new Button();
             ButtonImportXML = new Button();
             StatusStripMain = new StatusStrip();
-            ToolStripStatusLabelReportCount = new ToolStripStatusLabel();
             ToolStripStatusLabelDatabaseName = new ToolStripStatusLabel();
+            ToolStripStatusLabelReportCount = new ToolStripStatusLabel();
+            PlotMessagesOverTime = new ScottPlot.WinForms.FormsPlot();
+            DateTimePickerStart = new DateTimePicker();
+            DateTimePickerEnd = new DateTimePicker();
+            LabelStart = new Label();
+            LabelEnd = new Label();
             ((System.ComponentModel.ISupportInitialize)DataGridViewSenderOverview).BeginInit();
             MenuStripMain.SuspendLayout();
             StatusStripMain.SuspendLayout();
@@ -77,7 +82,7 @@ namespace DMARCReportAnalyzer
             MenuStripMain.Items.AddRange(new ToolStripItem[] { datenbankToolStripMenuItem, importToolStripMenuItem });
             MenuStripMain.Location = new Point(0, 0);
             MenuStripMain.Name = "MenuStripMain";
-            MenuStripMain.Size = new Size(800, 24);
+            MenuStripMain.Size = new Size(1307, 24);
             MenuStripMain.TabIndex = 6;
             // 
             // datenbankToolStripMenuItem
@@ -110,7 +115,7 @@ namespace DMARCReportAnalyzer
             // 
             // ButtonExportXML
             // 
-            ButtonExportXML.Location = new Point(713, 27);
+            ButtonExportXML.Location = new Point(1220, 27);
             ButtonExportXML.Name = "ButtonExportXML";
             ButtonExportXML.Size = new Size(75, 23);
             ButtonExportXML.TabIndex = 7;
@@ -120,7 +125,7 @@ namespace DMARCReportAnalyzer
             // 
             // ButtonImportXML
             // 
-            ButtonImportXML.Location = new Point(627, 27);
+            ButtonImportXML.Location = new Point(1134, 27);
             ButtonImportXML.Name = "ButtonImportXML";
             ButtonImportXML.Size = new Size(80, 23);
             ButtonImportXML.TabIndex = 8;
@@ -133,15 +138,9 @@ namespace DMARCReportAnalyzer
             StatusStripMain.Items.AddRange(new ToolStripItem[] { ToolStripStatusLabelDatabaseName, ToolStripStatusLabelReportCount });
             StatusStripMain.Location = new Point(0, 473);
             StatusStripMain.Name = "StatusStripMain";
-            StatusStripMain.Size = new Size(800, 24);
+            StatusStripMain.Size = new Size(1307, 24);
             StatusStripMain.TabIndex = 9;
             StatusStripMain.Text = "statusStrip1";
-            // 
-            // ToolStripStatusLabelReportCount
-            // 
-            ToolStripStatusLabelReportCount.Name = "ToolStripStatusLabelReportCount";
-            ToolStripStatusLabelReportCount.Size = new Size(78, 19);
-            ToolStripStatusLabelReportCount.Text = "Report Count";
             // 
             // ToolStripStatusLabelDatabaseName
             // 
@@ -150,11 +149,66 @@ namespace DMARCReportAnalyzer
             ToolStripStatusLabelDatabaseName.Size = new Size(59, 19);
             ToolStripStatusLabelDatabaseName.Text = "Database";
             // 
+            // ToolStripStatusLabelReportCount
+            // 
+            ToolStripStatusLabelReportCount.Name = "ToolStripStatusLabelReportCount";
+            ToolStripStatusLabelReportCount.Size = new Size(78, 19);
+            ToolStripStatusLabelReportCount.Text = "Report Count";
+            // 
+            // PlotMessagesOverTime
+            // 
+            PlotMessagesOverTime.DisplayScale = 1F;
+            PlotMessagesOverTime.Location = new Point(375, 56);
+            PlotMessagesOverTime.Name = "PlotMessagesOverTime";
+            PlotMessagesOverTime.Size = new Size(920, 382);
+            PlotMessagesOverTime.TabIndex = 10;
+            // 
+            // DateTimePickerStart
+            // 
+            DateTimePickerStart.Format = DateTimePickerFormat.Short;
+            DateTimePickerStart.Location = new Point(49, 27);
+            DateTimePickerStart.Name = "DateTimePickerStart";
+            DateTimePickerStart.Size = new Size(101, 23);
+            DateTimePickerStart.TabIndex = 11;
+            DateTimePickerStart.ValueChanged += DateTimePickerStart_ValueChanged;
+            // 
+            // DateTimePickerEnd
+            // 
+            DateTimePickerEnd.Format = DateTimePickerFormat.Short;
+            DateTimePickerEnd.Location = new Point(189, 27);
+            DateTimePickerEnd.Name = "DateTimePickerEnd";
+            DateTimePickerEnd.Size = new Size(104, 23);
+            DateTimePickerEnd.TabIndex = 12;
+            DateTimePickerEnd.ValueChanged += DateTimePickerEnd_ValueChanged;
+            // 
+            // LabelStart
+            // 
+            LabelStart.AutoSize = true;
+            LabelStart.Location = new Point(12, 31);
+            LabelStart.Name = "LabelStart";
+            LabelStart.Size = new Size(31, 15);
+            LabelStart.TabIndex = 13;
+            LabelStart.Text = "Start";
+            // 
+            // LabelEnd
+            // 
+            LabelEnd.AutoSize = true;
+            LabelEnd.Location = new Point(156, 31);
+            LabelEnd.Name = "LabelEnd";
+            LabelEnd.Size = new Size(27, 15);
+            LabelEnd.TabIndex = 14;
+            LabelEnd.Text = "End";
+            // 
             // FormMain
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(800, 497);
+            ClientSize = new Size(1307, 497);
+            Controls.Add(LabelEnd);
+            Controls.Add(LabelStart);
+            Controls.Add(DateTimePickerEnd);
+            Controls.Add(DateTimePickerStart);
+            Controls.Add(PlotMessagesOverTime);
             Controls.Add(StatusStripMain);
             Controls.Add(ButtonImportXML);
             Controls.Add(ButtonExportXML);
@@ -186,5 +240,10 @@ namespace DMARCReportAnalyzer
         private StatusStrip StatusStripMain;
         private ToolStripStatusLabel ToolStripStatusLabelReportCount;
         private ToolStripStatusLabel ToolStripStatusLabelDatabaseName;
+        private ScottPlot.WinForms.FormsPlot PlotMessagesOverTime;
+        private DateTimePicker DateTimePickerStart;
+        private DateTimePicker DateTimePickerEnd;
+        private Label LabelStart;
+        private Label LabelEnd;
     }
 }
