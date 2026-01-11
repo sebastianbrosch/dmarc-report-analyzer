@@ -1,9 +1,9 @@
 using Dapper;
 using DMARCReportAnalyzer.DMARC;
+using ScottPlot;
 using System.Data;
 using System.Data.Common;
 using System.Data.SQLite;
-using System.Linq;
 using System.Xml;
 
 namespace DMARCReportAnalyzer;
@@ -29,8 +29,8 @@ public partial class FormMain : Form
 
     struct ReportsTimeSpan
     {
-        public DateTime report_begin;
-        public DateTime report_end;
+        public DateTime? report_begin;
+        public DateTime? report_end;
     }
 
     private void OpenDatabaseToolStripMenuItem_Click(object sender, EventArgs e)
@@ -105,8 +105,14 @@ public partial class FormMain : Form
         }
 
         ReportsTimeSpan dateRange = DatabaseConnection.QuerySingle<ReportsTimeSpan>("SELECT DATE(MIN(report_begin)) report_begin, DATE(MAX(report_end)) report_end FROM metadata");
-        DateTimePickerStart.Value = dateRange.report_begin;
-        DateTimePickerEnd.Value = dateRange.report_end;
+
+        if (dateRange.report_begin is null || dateRange.report_end is null)
+        {
+            return;
+        }
+
+        DateTimePickerStart.Value = dateRange.report_begin.Value;
+        DateTimePickerEnd.Value = dateRange.report_end.Value;
 
         int reportCount = DatabaseConnection.QuerySingleOrDefault<int>("SELECT COUNT(id) FROM feedback");
         ToolStripStatusLabelReportCount.Text = reportCount + " Reports";
@@ -219,9 +225,28 @@ public partial class FormMain : Form
 
         DateTime[] dataX = messages!.ToList<MessageOverTime>().Select(x => x.report_date).ToArray<DateTime>();
         int[] dataY = messages!.ToList<MessageOverTime>().Select(x => x.message_count).ToArray<int>();
+
+
+        double[] xs = dataX.Select(d => d.ToOADate()).ToArray();
+        double[] ys = dataY.Select(v => (double)v).ToArray();
+
+
         PlotMessagesOverTime.Plot.Clear();
-        PlotMessagesOverTime.Plot.Add.Scatter(dataX, dataY);
-        var axis = PlotMessagesOverTime.Plot.Axes.DateTimeTicksBottom();
+        PlotMessagesOverTime.Plot.Add.Bars(xs, ys);
+        PlotMessagesOverTime.Plot.Axes.Margins(bottom: 0);
+
+        var dtAx = PlotMessagesOverTime.Plot.Axes.DateTimeTicksBottom();
+
+        dtAx.TickGenerator = new ScottPlot.TickGenerators.DateTimeFixedInterval(
+            new ScottPlot.TickGenerators.TimeUnits.Day(), 1,   // major: 1 Tag
+            new ScottPlot.TickGenerators.TimeUnits.Day(), 1,   // minor: 1 Tag (kannst du leer-labeln)
+            dt => new DateTime(dt.Year, dt.Month, dt.Day));
+
+        PlotMessagesOverTime.Plot.Axes.Bottom.TickLabelStyle.Rotation = 90;
+        PlotMessagesOverTime.Plot.Axes.Bottom.TickLabelStyle.Alignment = Alignment.MiddleLeft;
+        PlotMessagesOverTime.Plot.Axes.Bottom.MinimumSize = 120;
+
+
         PlotMessagesOverTime.Refresh();
     }
 
@@ -235,6 +260,7 @@ public partial class FormMain : Form
 
         using (FormImport frmImport = new FormImport(DatabaseConnection))
         {
+            frmImport.StartPosition = FormStartPosition.CenterParent;
             frmImport.ShowDialog(this);
         }
     }

@@ -95,14 +95,14 @@ namespace DMARCReportAnalyzer
             // NewDatabaseToolStripMenuItem
             // 
             NewDatabaseToolStripMenuItem.Name = "NewDatabaseToolStripMenuItem";
-            NewDatabaseToolStripMenuItem.Size = new Size(120, 22);
+            NewDatabaseToolStripMenuItem.Size = new Size(180, 22);
             NewDatabaseToolStripMenuItem.Text = "Neu...";
             NewDatabaseToolStripMenuItem.Click += NewDatabaseToolStripMenuItem_Click;
             // 
             // OpenDatabaseToolStripMenuItem
             // 
             OpenDatabaseToolStripMenuItem.Name = "OpenDatabaseToolStripMenuItem";
-            OpenDatabaseToolStripMenuItem.Size = new Size(120, 22);
+            OpenDatabaseToolStripMenuItem.Size = new Size(180, 22);
             OpenDatabaseToolStripMenuItem.Text = "Öffnen...";
             OpenDatabaseToolStripMenuItem.Click += OpenDatabaseToolStripMenuItem_Click;
             // 
@@ -157,6 +157,7 @@ namespace DMARCReportAnalyzer
             // 
             // PlotMessagesOverTime
             // 
+            PlotMessagesOverTime.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             PlotMessagesOverTime.DisplayScale = 1F;
             PlotMessagesOverTime.Location = new Point(375, 56);
             PlotMessagesOverTime.Name = "PlotMessagesOverTime";
