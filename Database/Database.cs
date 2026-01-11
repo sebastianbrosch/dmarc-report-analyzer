@@ -182,7 +182,23 @@ public class Database
               result VARCHAR(9) NOT NULL,
               human_result VARCHAR(255) NULL,
               FOREIGN KEY (record_id) REFERENCES record(id)
-            );"
+            );
+            CREATE VIEW metadata_expansion
+            AS
+            SELECT feedback_id,
+              CASE
+                WHEN DATE(report_begin) = DATE(report_end) THEN
+                  DATE(report_begin)
+                WHEN CAST(strftime('%H', report_begin) AS INTEGER) = 0 AND CAST(strftime('%H', report_end) AS INTEGER) = 0 THEN
+                  DATE(report_end)
+                WHEN CAST(strftime('%H', report_begin) AS INTEGER) >= 19 THEN
+                  DATE(report_end)
+                WHEN CAST(strftime('%H', report_begin) AS INTEGER) < 19 THEN
+                  DATE(report_begin)
+                ELSE
+                  NULL
+              END report_date
+            FROM metadata;"
         );
     }
 }
