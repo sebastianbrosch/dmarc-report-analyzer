@@ -4,6 +4,7 @@ using ScottPlot;
 using System.Data;
 using System.Data.Common;
 using System.Data.SQLite;
+using System.Text;
 using System.Xml;
 
 namespace DMARCReportAnalyzer;
@@ -169,67 +170,33 @@ public partial class FormMain : Form
 
         if (begin is null || end is null)
         {
-            sqlMessagesOverTime = """
-            SELECT SUM(r.count) message_count,
-            	CASE WHEN DATE(report_begin) = DATE(report_end) THEN 
-            		DATE(report_begin) 
-            	ELSE
-            		CASE WHEN CAST(strftime('%H', report_begin) AS INT) = 0 AND CAST(strftime('%H', report_end) AS INT) = 0 THEN 
-            			DATE(report_begin) 
-            		ELSE 
-            			CASE WHEN CAST(strftime('%H', report_end) AS INT) >= 12 THEN 
-            				DATE(report_end) 
-            			ELSE 
-            				CASE WHEN CAST(strftime('%H', report_end) AS INT) <= 11 THEN 
-            					DATE(report_begin) 
-            				ELSE 
-            					NULL 
-            				END 
-            			END 
-            		END 
-            	END report_date
-            FROM metadata m INNER JOIN record r ON m.feedback_id = r.feedback_id
-            GROUP BY report_date
-            ORDER BY report_date ASC
-            """;
+            sqlMessagesOverTime = @"
+              SELECT report_date, SUM(r.count) message_count
+              FROM metadata m 
+                INNER JOIN metadata_expansion me ON me.feedback_id = m.feedback_id 
+                INNER JOIN record r ON m.feedback_id = r.feedback_id
+              GROUP BY report_date
+              ORDER BY report_date ASC";
             messages = DatabaseConnection.Query<MessageOverTime>(sqlMessagesOverTime);
         }
         else
         {
-            sqlMessagesOverTime = """
-            SELECT SUM(r.count) message_count,
-            	CASE WHEN DATE(report_begin) = DATE(report_end) THEN 
-            		DATE(report_begin) 
-            	ELSE
-            		CASE WHEN CAST(strftime('%H', report_begin) AS INT) = 0 AND CAST(strftime('%H', report_end) AS INT) = 0 THEN 
-            			DATE(report_begin) 
-            		ELSE 
-            			CASE WHEN CAST(strftime('%H', report_end) AS INT) >= 12 THEN 
-            				DATE(report_end) 
-            			ELSE 
-            				CASE WHEN CAST(strftime('%H', report_end) AS INT) <= 11 THEN 
-            					DATE(report_begin) 
-            				ELSE 
-            					NULL 
-            				END 
-            			END 
-            		END 
-            	END report_date
-            FROM metadata m INNER JOIN record r ON m.feedback_id = r.feedback_id
-            WHERE DATE(report_date) >= @begin AND DATE(report_date) <= @end
-            GROUP BY report_date
-            ORDER BY report_date ASC
-            """;
+            sqlMessagesOverTime = @"
+              SELECT report_date, SUM(r.count) message_count
+              FROM metadata m 
+                INNER JOIN metadata_expansion me ON me.feedback_id = m.feedback_id 
+                INNER JOIN record r ON m.feedback_id = r.feedback_id
+              WHERE report_date BETWEEN @begin AND @end
+              GROUP BY report_date
+              ORDER BY report_date ASC";
             messages = DatabaseConnection.Query<MessageOverTime>(sqlMessagesOverTime, new { begin = begin, end = end });
         }
 
         DateTime[] dataX = messages!.ToList<MessageOverTime>().Select(x => x.report_date).ToArray<DateTime>();
         int[] dataY = messages!.ToList<MessageOverTime>().Select(x => x.message_count).ToArray<int>();
 
-
         double[] xs = dataX.Select(d => d.ToOADate()).ToArray();
         double[] ys = dataY.Select(v => (double)v).ToArray();
-
 
         PlotMessagesOverTime.Plot.Clear();
         PlotMessagesOverTime.Plot.Add.Bars(xs, ys);
@@ -245,7 +212,6 @@ public partial class FormMain : Form
         PlotMessagesOverTime.Plot.Axes.Bottom.TickLabelStyle.Rotation = 90;
         PlotMessagesOverTime.Plot.Axes.Bottom.TickLabelStyle.Alignment = Alignment.MiddleLeft;
         PlotMessagesOverTime.Plot.Axes.Bottom.MinimumSize = 120;
-
 
         PlotMessagesOverTime.Refresh();
     }
