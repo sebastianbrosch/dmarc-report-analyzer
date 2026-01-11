@@ -34,18 +34,22 @@ namespace DMARCReportAnalyzer
             TextBoxUsername = new TextBox();
             TextBoxServer = new TextBox();
             ButtonImport = new Button();
+            TextBoxArchiveFolder = new TextBox();
+            TextBoxSourceFolder = new TextBox();
             GroupBoxMailServer.SuspendLayout();
             SuspendLayout();
             // 
             // GroupBoxMailServer
             // 
+            GroupBoxMailServer.Controls.Add(TextBoxSourceFolder);
+            GroupBoxMailServer.Controls.Add(TextBoxArchiveFolder);
             GroupBoxMailServer.Controls.Add(TextBoxPort);
             GroupBoxMailServer.Controls.Add(TextBoxPassword);
             GroupBoxMailServer.Controls.Add(TextBoxUsername);
             GroupBoxMailServer.Controls.Add(TextBoxServer);
             GroupBoxMailServer.Location = new Point(12, 12);
             GroupBoxMailServer.Name = "GroupBoxMailServer";
-            GroupBoxMailServer.Size = new Size(266, 112);
+            GroupBoxMailServer.Size = new Size(266, 172);
             GroupBoxMailServer.TabIndex = 0;
             GroupBoxMailServer.TabStop = false;
             GroupBoxMailServer.Text = "Mail-Server";
@@ -85,7 +89,7 @@ namespace DMARCReportAnalyzer
             // 
             // ButtonImport
             // 
-            ButtonImport.Location = new Point(203, 130);
+            ButtonImport.Location = new Point(203, 190);
             ButtonImport.Name = "ButtonImport";
             ButtonImport.Size = new Size(75, 23);
             ButtonImport.TabIndex = 1;
@@ -93,11 +97,28 @@ namespace DMARCReportAnalyzer
             ButtonImport.UseVisualStyleBackColor = true;
             ButtonImport.Click += ButtonImport_Click;
             // 
+            // TextBoxArchiveFolder
+            // 
+            TextBoxArchiveFolder.Location = new Point(6, 138);
+            TextBoxArchiveFolder.Name = "TextBoxArchiveFolder";
+            TextBoxArchiveFolder.PlaceholderText = "Archive";
+            TextBoxArchiveFolder.Size = new Size(193, 23);
+            TextBoxArchiveFolder.TabIndex = 4;
+            // 
+            // TextBoxSourceFolder
+            // 
+            TextBoxSourceFolder.Location = new Point(6, 109);
+            TextBoxSourceFolder.Name = "TextBoxSourceFolder";
+            TextBoxSourceFolder.PlaceholderText = "Source";
+            TextBoxSourceFolder.Size = new Size(193, 23);
+            TextBoxSourceFolder.TabIndex = 5;
+            TextBoxSourceFolder.Text = "INBOX";
+            // 
             // FormImport
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(286, 161);
+            ClientSize = new Size(286, 221);
             Controls.Add(ButtonImport);
             Controls.Add(GroupBoxMailServer);
             Name = "FormImport";
@@ -115,5 +136,7 @@ namespace DMARCReportAnalyzer
         private TextBox TextBoxPassword;
         private TextBox TextBoxUsername;
         private Button ButtonImport;
+        private TextBox TextBoxArchiveFolder;
+        private TextBox TextBoxSourceFolder;
     }
 }

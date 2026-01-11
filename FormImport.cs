@@ -67,13 +67,40 @@ public partial class FormImport : Form
         {
             client.Connect(server, port, MailKit.Security.SecureSocketOptions.SslOnConnect);
             client.Authenticate(username, password);
-            client.Inbox.Open(MailKit.FolderAccess.ReadOnly);
             Log.Information("Anmeldung am Postfach erfolgreich.");
         } catch (Exception e)
         {
             MessageBox.Show(this, "Anmeldung am Postfach fehlgeschlagen: " + e.Message, "Anmeldung am Postfach", MessageBoxButtons.OK, MessageBoxIcon.Error);
             Log.Error("Anmeldung am Postfach fehlgeschlagen: {error}", e.Message);
             return;
+        }
+
+        MailKit.IMailFolder sourceFolder;
+        MailKit.IMailFolder? archiveFolder;
+
+        if (string.IsNullOrWhiteSpace(TextBoxSourceFolder.Text) || TextBoxSourceFolder.Text.Equals("INBOX", StringComparison.InvariantCultureIgnoreCase))
+        {
+            sourceFolder = client.Inbox;
+        } else
+        {
+            sourceFolder = client.Inbox.GetSubfolder(TextBoxSourceFolder.Text);
+        }
+
+        if (string.IsNullOrWhiteSpace(TextBoxArchiveFolder.Text))
+        {
+            archiveFolder = null;
+            sourceFolder.Open(MailKit.FolderAccess.ReadOnly);
+        } else
+        {
+            if (client.Capabilities.HasFlag(ImapCapabilities.Move))
+            {
+                archiveFolder = client.GetFolder(TextBoxArchiveFolder.Text);
+                sourceFolder.Open(MailKit.FolderAccess.ReadWrite);
+            } else
+            {
+                archiveFolder = null;
+                sourceFolder.Open(MailKit.FolderAccess.ReadOnly);
+            }
         }
 
         // get all the mails.
@@ -84,6 +111,7 @@ public partial class FormImport : Form
         foreach (MailKit.UniqueId inboxUId in inboxUIds)
         {
             MimeMessage message = client.Inbox.GetMessage(inboxUId);
+            bool hasFailure = false;
 
             if (message is null)
             {
@@ -139,6 +167,7 @@ public partial class FormImport : Form
                     if (feedback is null)
                     {
                         Log.Error("Feedback des DMARC-Reports konnte nicht ermittelt werden.");
+                        hasFailure = true;
                         continue;
                     }
 
@@ -147,6 +176,7 @@ public partial class FormImport : Form
                     if (storage is null)
                     {
                         Log.Error("Speicher für das Feedback des DMARC-Reports konnte nicht ermittelt werden.");
+                        hasFailure = true;
                         continue;
                     }
 
@@ -164,12 +194,18 @@ public partial class FormImport : Form
                     else
                     {
                         Log.Error("DMARC-Report konnte nicht in der Datenbank gespeichert werden.");
+                        hasFailure = true;
                     }
                 }
 
                 Log.Information("Lösche temporäre Dateien.");
                 File.Delete(filePathXml);
                 File.Delete(reportPath);
+            }
+
+            if (archiveFolder is not null && !hasFailure)
+            {
+                sourceFolder.MoveTo(inboxUId, archiveFolder);
             }
         }
 
