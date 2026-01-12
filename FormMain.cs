@@ -1,10 +1,10 @@
 using Dapper;
 using DMARCReportAnalyzer.DMARC;
 using ScottPlot;
+using ScottPlot.WinForms;
 using System.Data;
 using System.Data.Common;
 using System.Data.SQLite;
-using System.Text;
 using System.Xml;
 
 namespace DMARCReportAnalyzer;
@@ -32,6 +32,15 @@ public partial class FormMain : Form
     {
         public DateTime? report_begin;
         public DateTime? report_end;
+    }
+
+    struct DKIMSPF
+    {
+        public DateTime report_date;
+        public int dkim_pass_count;
+        public int dkim_fail_count;
+        public int spf_pass_count;
+        public int spf_fail_count;
     }
 
     private void OpenDatabaseToolStripMenuItem_Click(object sender, EventArgs e)
@@ -144,7 +153,7 @@ public partial class FormMain : Form
             reader = DatabaseConnection.ExecuteReader("SELECT source_ip, SUM(r.count) message_count FROM record r GROUP BY source_ip");
         } else
         {
-            reader = DatabaseConnection.ExecuteReader("SELECT source_ip, SUM(r.count) message_count FROM record r INNER JOIN metadata m ON r.feedback_id = m.feedback_id WHERE DATE(m.report_begin) >= @begin AND DATE(m.report_end) <= @end GROUP BY source_ip", new { begin = begin, end = end });
+            reader = DatabaseConnection.ExecuteReader("SELECT source_ip, SUM(r.count) message_count FROM record r INNER JOIN metadata_expansion me ON r.feedback_id = me.feedback_id WHERE me.report_date BETWEEN @begin AND @end GROUP BY source_ip", new { begin = begin, end = end });
         }
 
         DataSet dsSenderOverview = new DataSet();
@@ -214,6 +223,92 @@ public partial class FormMain : Form
         PlotMessagesOverTime.Plot.Axes.Bottom.MinimumSize = 120;
 
         PlotMessagesOverTime.Refresh();
+
+        string sqlDKIMSPF = @"
+          SELECT me.report_date,
+            SUM(CASE WHEN pe.dkim = 'pass' THEN r.count ELSE 0 END) dkim_pass_count, 
+            SUM(CASE WHEN pe.dkim = 'fail' THEN r.count ELSE 0 END) dkim_fail_count,
+            SUM(CASE WHEN pe.spf = 'pass' THEN r.count ELSE 0 END) spf_pass_count,
+            SUM(CASE WHEN pe.spf = 'fail' THEN r.count ELSE 0 END) spf_fail_count
+          FROM policy_evaluated pe 
+            INNER JOIN record r ON pe.record_id = r.id 
+            INNER JOIN metadata_expansion me ON r.feedback_id = me.feedback_id 
+          GROUP BY me.report_date
+          ORDER BY me.report_date ASC";
+        IEnumerable<DKIMSPF> datas = DatabaseConnection.Query<DKIMSPF>(sqlDKIMSPF);
+
+        LoadPlotDKIM(datas, PlotDKIM);
+        LoadPlotSPF(datas, PlotSPF);
+    }
+
+    private void LoadPlotDKIM(IEnumerable<DKIMSPF> datas, FormsPlot plot)
+    {
+        ScottPlot.Palettes.Category10 palette = new();
+        List<Bar> bars = new();
+
+        foreach (DKIMSPF data in datas)
+        {
+            bars.Add(new() { Position = data.report_date.ToOADate(), ValueBase = 0, Value = data.dkim_pass_count, FillColor = palette.GetColor(0) });
+            bars.Add(new() { Position = data.report_date.ToOADate(), ValueBase = data.dkim_pass_count, Value = data.dkim_fail_count + data.dkim_pass_count, FillColor = palette.GetColor(1) });
+        }
+
+        plot.Plot.Add.Bars(bars);
+
+        plot.Plot.Axes.Margins(bottom: 0);
+
+        var dtAxx = plot.Plot.Axes.DateTimeTicksBottom();
+
+        dtAxx.TickGenerator = new ScottPlot.TickGenerators.DateTimeFixedInterval(
+            new ScottPlot.TickGenerators.TimeUnits.Day(), 1,   // major: 1 Tag
+            new ScottPlot.TickGenerators.TimeUnits.Day(), 1,   // minor: 1 Tag (kannst du leer-labeln)
+            dt => new DateTime(dt.Year, dt.Month, dt.Day));
+
+        plot.Plot.Axes.Bottom.TickLabelStyle.Rotation = 90;
+        plot.Plot.Axes.Bottom.TickLabelStyle.Alignment = Alignment.MiddleLeft;
+        plot.Plot.Axes.Bottom.MinimumSize = 120;
+
+        plot.Plot.Legend.IsVisible = true;
+        plot.Plot.Legend.Alignment = Alignment.UpperLeft;
+        plot.Plot.Legend.ManualItems.Clear();
+        plot.Plot.Legend.ManualItems.Add(new() { LabelText = "DKIM Pass", FillColor = palette.GetColor(0) });
+        plot.Plot.Legend.ManualItems.Add(new() { LabelText = "DKIM Fail", FillColor = palette.GetColor(1) });
+
+        plot.Refresh();
+    }
+
+    private void LoadPlotSPF(IEnumerable<DKIMSPF> datas, FormsPlot plot)
+    {
+        ScottPlot.Palettes.Category10 palette = new();
+        List<Bar> bars = new();
+
+        foreach (DKIMSPF data in datas)
+        {
+            bars.Add(new() { Position = data.report_date.ToOADate(), ValueBase = 0, Value = data.spf_pass_count, FillColor = palette.GetColor(0) });
+            bars.Add(new() { Position = data.report_date.ToOADate(), ValueBase = data.spf_pass_count, Value = data.spf_fail_count + data.spf_pass_count, FillColor = palette.GetColor(1) });
+        }
+
+        plot.Plot.Add.Bars(bars);
+
+        plot.Plot.Axes.Margins(bottom: 0);
+
+        var dtAxx = plot.Plot.Axes.DateTimeTicksBottom();
+
+        dtAxx.TickGenerator = new ScottPlot.TickGenerators.DateTimeFixedInterval(
+            new ScottPlot.TickGenerators.TimeUnits.Day(), 1,   // major: 1 Tag
+            new ScottPlot.TickGenerators.TimeUnits.Day(), 1,   // minor: 1 Tag (kannst du leer-labeln)
+            dt => new DateTime(dt.Year, dt.Month, dt.Day));
+
+        plot.Plot.Axes.Bottom.TickLabelStyle.Rotation = 90;
+        plot.Plot.Axes.Bottom.TickLabelStyle.Alignment = Alignment.MiddleLeft;
+        plot.Plot.Axes.Bottom.MinimumSize = 120;
+
+        plot.Plot.Legend.IsVisible = true;
+        plot.Plot.Legend.Alignment = Alignment.UpperLeft;
+        plot.Plot.Legend.ManualItems.Clear();
+        plot.Plot.Legend.ManualItems.Add(new() { LabelText = "SPF Pass", FillColor = palette.GetColor(0) });
+        plot.Plot.Legend.ManualItems.Add(new() { LabelText = "SPF Fail", FillColor = palette.GetColor(1) });
+
+        plot.Refresh();
     }
 
     private void importToolStripMenuItem_Click(object sender, EventArgs e)

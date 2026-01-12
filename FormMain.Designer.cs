@@ -46,6 +46,8 @@ namespace DMARCReportAnalyzer
             DateTimePickerEnd = new DateTimePicker();
             LabelStart = new Label();
             LabelEnd = new Label();
+            PlotDKIM = new ScottPlot.WinForms.FormsPlot();
+            PlotSPF = new ScottPlot.WinForms.FormsPlot();
             ((System.ComponentModel.ISupportInitialize)DataGridViewSenderOverview).BeginInit();
             MenuStripMain.SuspendLayout();
             StatusStripMain.SuspendLayout();
@@ -95,14 +97,14 @@ namespace DMARCReportAnalyzer
             // NewDatabaseToolStripMenuItem
             // 
             NewDatabaseToolStripMenuItem.Name = "NewDatabaseToolStripMenuItem";
-            NewDatabaseToolStripMenuItem.Size = new Size(180, 22);
+            NewDatabaseToolStripMenuItem.Size = new Size(120, 22);
             NewDatabaseToolStripMenuItem.Text = "Neu...";
             NewDatabaseToolStripMenuItem.Click += NewDatabaseToolStripMenuItem_Click;
             // 
             // OpenDatabaseToolStripMenuItem
             // 
             OpenDatabaseToolStripMenuItem.Name = "OpenDatabaseToolStripMenuItem";
-            OpenDatabaseToolStripMenuItem.Size = new Size(180, 22);
+            OpenDatabaseToolStripMenuItem.Size = new Size(120, 22);
             OpenDatabaseToolStripMenuItem.Text = "Öffnen...";
             OpenDatabaseToolStripMenuItem.Click += OpenDatabaseToolStripMenuItem_Click;
             // 
@@ -136,7 +138,7 @@ namespace DMARCReportAnalyzer
             // StatusStripMain
             // 
             StatusStripMain.Items.AddRange(new ToolStripItem[] { ToolStripStatusLabelDatabaseName, ToolStripStatusLabelReportCount });
-            StatusStripMain.Location = new Point(0, 473);
+            StatusStripMain.Location = new Point(0, 795);
             StatusStripMain.Name = "StatusStripMain";
             StatusStripMain.Size = new Size(1307, 24);
             StatusStripMain.TabIndex = 9;
@@ -200,11 +202,31 @@ namespace DMARCReportAnalyzer
             LabelEnd.TabIndex = 14;
             LabelEnd.Text = "End";
             // 
+            // PlotDKIM
+            // 
+            PlotDKIM.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            PlotDKIM.DisplayScale = 1F;
+            PlotDKIM.Location = new Point(12, 444);
+            PlotDKIM.Name = "PlotDKIM";
+            PlotDKIM.Size = new Size(639, 348);
+            PlotDKIM.TabIndex = 15;
+            // 
+            // PlotSPF
+            // 
+            PlotSPF.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            PlotSPF.DisplayScale = 1F;
+            PlotSPF.Location = new Point(657, 444);
+            PlotSPF.Name = "PlotSPF";
+            PlotSPF.Size = new Size(638, 348);
+            PlotSPF.TabIndex = 16;
+            // 
             // FormMain
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1307, 497);
+            ClientSize = new Size(1307, 819);
+            Controls.Add(PlotSPF);
+            Controls.Add(PlotDKIM);
             Controls.Add(LabelEnd);
             Controls.Add(LabelStart);
             Controls.Add(DateTimePickerEnd);
@@ -246,5 +268,7 @@ namespace DMARCReportAnalyzer
         private DateTimePicker DateTimePickerEnd;
         private Label LabelStart;
         private Label LabelEnd;
+        private ScottPlot.WinForms.FormsPlot PlotDKIM;
+        private ScottPlot.WinForms.FormsPlot PlotSPF;
     }
 }
