@@ -121,7 +121,8 @@ public partial class FormMain : Form
             return;
         }
 
-        DateTimePickerStart.Value = dateRange.report_begin.Value;
+        DateTime begin = dateRange.report_end.Value.AddDays(-7);
+        DateTimePickerStart.Value = begin;
         DateTimePickerEnd.Value = dateRange.report_end.Value;
 
         int reportCount = DatabaseConnection.QuerySingleOrDefault<int>("SELECT COUNT(id) FROM feedback");
@@ -151,7 +152,8 @@ public partial class FormMain : Form
         if (begin is null || end is null)
         {
             reader = DatabaseConnection.ExecuteReader("SELECT source_ip, SUM(r.count) message_count FROM record r GROUP BY source_ip");
-        } else
+        }
+        else
         {
             reader = DatabaseConnection.ExecuteReader("SELECT source_ip, SUM(r.count) message_count FROM record r INNER JOIN metadata_expansion me ON r.feedback_id = me.feedback_id WHERE me.report_date BETWEEN @begin AND @end GROUP BY source_ip", new { begin = begin, end = end });
         }
@@ -224,18 +226,38 @@ public partial class FormMain : Form
 
         PlotMessagesOverTime.Refresh();
 
-        string sqlDKIMSPF = @"
-          SELECT me.report_date,
-            SUM(CASE WHEN pe.dkim = 'pass' THEN r.count ELSE 0 END) dkim_pass_count, 
-            SUM(CASE WHEN pe.dkim = 'fail' THEN r.count ELSE 0 END) dkim_fail_count,
-            SUM(CASE WHEN pe.spf = 'pass' THEN r.count ELSE 0 END) spf_pass_count,
-            SUM(CASE WHEN pe.spf = 'fail' THEN r.count ELSE 0 END) spf_fail_count
-          FROM policy_evaluated pe 
-            INNER JOIN record r ON pe.record_id = r.id 
-            INNER JOIN metadata_expansion me ON r.feedback_id = me.feedback_id 
-          GROUP BY me.report_date
-          ORDER BY me.report_date ASC";
-        IEnumerable<DKIMSPF> datas = DatabaseConnection.Query<DKIMSPF>(sqlDKIMSPF);
+        IEnumerable<DKIMSPF> datas = Enumerable.Empty<DKIMSPF>();
+
+        if (begin is null || end is null)
+        {
+            string sqlDKIMSPF = @"
+              SELECT me.report_date,
+                SUM(CASE WHEN pe.dkim = 'pass' THEN r.count ELSE 0 END) dkim_pass_count, 
+                SUM(CASE WHEN pe.dkim = 'fail' THEN r.count ELSE 0 END) dkim_fail_count,
+                SUM(CASE WHEN pe.spf = 'pass' THEN r.count ELSE 0 END) spf_pass_count,
+                SUM(CASE WHEN pe.spf = 'fail' THEN r.count ELSE 0 END) spf_fail_count
+              FROM policy_evaluated pe 
+                INNER JOIN record r ON pe.record_id = r.id 
+                INNER JOIN metadata_expansion me ON r.feedback_id = me.feedback_id 
+              GROUP BY me.report_date
+              ORDER BY me.report_date ASC";
+            datas = DatabaseConnection.Query<DKIMSPF>(sqlDKIMSPF);
+        } else
+        {
+            string sqlDKIMSPF = @"
+              SELECT me.report_date,
+                SUM(CASE WHEN pe.dkim = 'pass' THEN r.count ELSE 0 END) dkim_pass_count, 
+                SUM(CASE WHEN pe.dkim = 'fail' THEN r.count ELSE 0 END) dkim_fail_count,
+                SUM(CASE WHEN pe.spf = 'pass' THEN r.count ELSE 0 END) spf_pass_count,
+                SUM(CASE WHEN pe.spf = 'fail' THEN r.count ELSE 0 END) spf_fail_count
+              FROM policy_evaluated pe 
+                INNER JOIN record r ON pe.record_id = r.id 
+                INNER JOIN metadata_expansion me ON r.feedback_id = me.feedback_id 
+              WHERE report_date BETWEEN @begin AND @end
+              GROUP BY me.report_date
+              ORDER BY me.report_date ASC";
+            datas = DatabaseConnection.Query<DKIMSPF>(sqlDKIMSPF, new { begin = begin, end = end });
+        }
 
         LoadPlotDKIM(datas, PlotDKIM);
         LoadPlotSPF(datas, PlotSPF);
@@ -259,8 +281,8 @@ public partial class FormMain : Form
         var dtAxx = plot.Plot.Axes.DateTimeTicksBottom();
 
         dtAxx.TickGenerator = new ScottPlot.TickGenerators.DateTimeFixedInterval(
-            new ScottPlot.TickGenerators.TimeUnits.Day(), 1,   // major: 1 Tag
-            new ScottPlot.TickGenerators.TimeUnits.Day(), 1,   // minor: 1 Tag (kannst du leer-labeln)
+            new ScottPlot.TickGenerators.TimeUnits.Day(), 1,
+            new ScottPlot.TickGenerators.TimeUnits.Day(), 1,
             dt => new DateTime(dt.Year, dt.Month, dt.Day));
 
         plot.Plot.Axes.Bottom.TickLabelStyle.Rotation = 90;
@@ -294,8 +316,8 @@ public partial class FormMain : Form
         var dtAxx = plot.Plot.Axes.DateTimeTicksBottom();
 
         dtAxx.TickGenerator = new ScottPlot.TickGenerators.DateTimeFixedInterval(
-            new ScottPlot.TickGenerators.TimeUnits.Day(), 1,   // major: 1 Tag
-            new ScottPlot.TickGenerators.TimeUnits.Day(), 1,   // minor: 1 Tag (kannst du leer-labeln)
+            new ScottPlot.TickGenerators.TimeUnits.Day(), 1,
+            new ScottPlot.TickGenerators.TimeUnits.Day(), 1,
             dt => new DateTime(dt.Year, dt.Month, dt.Day));
 
         plot.Plot.Axes.Bottom.TickLabelStyle.Rotation = 90;
@@ -439,7 +461,30 @@ public partial class FormMain : Form
 
     private void DateTimePickerEnd_ValueChanged(object sender, EventArgs e)
     {
-        LoadSenderOverview(DateTimePickerStart.Value, DateTimePickerEnd.Value);
-        LoadPlotMessagesOverTime(DateTimePickerStart.Value, DateTimePickerEnd.Value);
+        if (DatabaseConnection is not null)
+        {
+            LoadSenderOverview(DateTimePickerStart.Value, DateTimePickerEnd.Value);
+            LoadPlotMessagesOverTime(DateTimePickerStart.Value, DateTimePickerEnd.Value);
+        }
+    }
+
+    private void reportsToolStripMenuItem_Click(object sender, EventArgs e)
+    {
+        if (DatabaseConnection is null)
+        {
+            MessageBox.Show("Es wird eine Datenbankverbindung benötigt.", "Reports", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return;
+        }
+
+        using (FormReports frmReports = new FormReports(DatabaseConnection))
+        {
+            frmReports.StartPosition = FormStartPosition.CenterParent;
+            frmReports.ShowDialog(this);
+        }
+    }
+
+    private void FormMain_FormClosing(object sender, FormClosingEventArgs e)
+    {
+        DatabaseConnection?.Close();
     }
 }

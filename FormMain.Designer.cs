@@ -36,6 +36,7 @@ namespace DMARCReportAnalyzer
             NewDatabaseToolStripMenuItem = new ToolStripMenuItem();
             OpenDatabaseToolStripMenuItem = new ToolStripMenuItem();
             importToolStripMenuItem = new ToolStripMenuItem();
+            reportsToolStripMenuItem = new ToolStripMenuItem();
             ButtonExportXML = new Button();
             ButtonImportXML = new Button();
             StatusStripMain = new StatusStrip();
@@ -81,7 +82,7 @@ namespace DMARCReportAnalyzer
             // 
             // MenuStripMain
             // 
-            MenuStripMain.Items.AddRange(new ToolStripItem[] { datenbankToolStripMenuItem, importToolStripMenuItem });
+            MenuStripMain.Items.AddRange(new ToolStripItem[] { datenbankToolStripMenuItem, importToolStripMenuItem, reportsToolStripMenuItem });
             MenuStripMain.Location = new Point(0, 0);
             MenuStripMain.Name = "MenuStripMain";
             MenuStripMain.Size = new Size(1307, 24);
@@ -114,6 +115,13 @@ namespace DMARCReportAnalyzer
             importToolStripMenuItem.Size = new Size(55, 20);
             importToolStripMenuItem.Text = "Import";
             importToolStripMenuItem.Click += importToolStripMenuItem_Click;
+            // 
+            // reportsToolStripMenuItem
+            // 
+            reportsToolStripMenuItem.Name = "reportsToolStripMenuItem";
+            reportsToolStripMenuItem.Size = new Size(59, 20);
+            reportsToolStripMenuItem.Text = "Reports";
+            reportsToolStripMenuItem.Click += reportsToolStripMenuItem_Click;
             // 
             // ButtonExportXML
             // 
@@ -240,6 +248,7 @@ namespace DMARCReportAnalyzer
             MainMenuStrip = MenuStripMain;
             Name = "FormMain";
             Text = "DMARC Report Analyzer";
+            FormClosing += FormMain_FormClosing;
             ((System.ComponentModel.ISupportInitialize)DataGridViewSenderOverview).EndInit();
             MenuStripMain.ResumeLayout(false);
             MenuStripMain.PerformLayout();
@@ -270,5 +279,6 @@ namespace DMARCReportAnalyzer
         private Label LabelEnd;
         private ScottPlot.WinForms.FormsPlot PlotDKIM;
         private ScottPlot.WinForms.FormsPlot PlotSPF;
+        private ToolStripMenuItem reportsToolStripMenuItem;
     }
 }
