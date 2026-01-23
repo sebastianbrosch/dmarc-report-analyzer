@@ -242,7 +242,8 @@ public partial class FormMain : Form
               GROUP BY me.report_date
               ORDER BY me.report_date ASC";
             datas = DatabaseConnection.Query<DKIMSPF>(sqlDKIMSPF);
-        } else
+        }
+        else
         {
             string sqlDKIMSPF = @"
               SELECT me.report_date,
@@ -348,50 +349,42 @@ public partial class FormMain : Form
         }
     }
 
-    private void ButtonExportXML_Click(object sender, EventArgs e)
+    private void DateTimePickerStart_ValueChanged(object sender, EventArgs e)
     {
-        if (DatabaseConnection is null)
+        LoadSenderOverview(DateTimePickerStart.Value, DateTimePickerEnd.Value);
+        LoadPlotMessagesOverTime(DateTimePickerStart.Value, DateTimePickerEnd.Value);
+    }
+
+    private void DateTimePickerEnd_ValueChanged(object sender, EventArgs e)
+    {
+        if (DatabaseConnection is not null)
         {
-            MessageBox.Show(this, "Es muss eine Datenbank geöffnet sein!", "Export XML", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            return;
-        }
-
-        string exportFolder = string.Empty;
-
-        using (FolderBrowserDialog dlgSelectFolder = new FolderBrowserDialog())
-        {
-            dlgSelectFolder.Description = "Speicherort für XML-Dokumente";
-            dlgSelectFolder.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-            dlgSelectFolder.Multiselect = false;
-            dlgSelectFolder.ShowHiddenFiles = false;
-            dlgSelectFolder.ShowNewFolderButton = true;
-            dlgSelectFolder.ShowPinnedPlaces = false;
-            dlgSelectFolder.UseDescriptionForTitle = true;
-
-            if (dlgSelectFolder.ShowDialog(this) == DialogResult.OK)
-            {
-                exportFolder = dlgSelectFolder.SelectedPath;
-            }
-        }
-
-        if (!Directory.Exists(exportFolder))
-        {
-            MessageBox.Show(this, "Das Exportverzeichnis ist nicht vorhanden!", "Export XML", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            return;
-        }
-
-        var documents = DatabaseConnection.Query("SELECT id, data FROM feedback");
-
-        foreach (var document in documents)
-        {
-            string exportFilePath = Path.Combine(exportFolder, document.id + ".xml");
-            XmlDocument documentXml = new XmlDocument();
-            documentXml.LoadXml(document.data);
-            documentXml.Save(exportFilePath);
+            LoadSenderOverview(DateTimePickerStart.Value, DateTimePickerEnd.Value);
+            LoadPlotMessagesOverTime(DateTimePickerStart.Value, DateTimePickerEnd.Value);
         }
     }
 
-    private void ButtonImportXML_Click(object sender, EventArgs e)
+    private void reportsToolStripMenuItem_Click(object sender, EventArgs e)
+    {
+        if (DatabaseConnection is null)
+        {
+            MessageBox.Show("Es wird eine Datenbankverbindung benötigt.", "Reports", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return;
+        }
+
+        using (FormReports frmReports = new FormReports(DatabaseConnection))
+        {
+            frmReports.StartPosition = FormStartPosition.CenterParent;
+            frmReports.ShowDialog(this);
+        }
+    }
+
+    private void FormMain_FormClosing(object sender, FormClosingEventArgs e)
+    {
+        DatabaseConnection?.Close();
+    }
+
+    private void importToolStripMenuItem1_Click(object sender, EventArgs e)
     {
         if (DatabaseConnection is null)
         {
@@ -453,38 +446,46 @@ public partial class FormMain : Form
         }
     }
 
-    private void DateTimePickerStart_ValueChanged(object sender, EventArgs e)
-    {
-        LoadSenderOverview(DateTimePickerStart.Value, DateTimePickerEnd.Value);
-        LoadPlotMessagesOverTime(DateTimePickerStart.Value, DateTimePickerEnd.Value);
-    }
-
-    private void DateTimePickerEnd_ValueChanged(object sender, EventArgs e)
-    {
-        if (DatabaseConnection is not null)
-        {
-            LoadSenderOverview(DateTimePickerStart.Value, DateTimePickerEnd.Value);
-            LoadPlotMessagesOverTime(DateTimePickerStart.Value, DateTimePickerEnd.Value);
-        }
-    }
-
-    private void reportsToolStripMenuItem_Click(object sender, EventArgs e)
+    private void exportToolStripMenuItem_Click(object sender, EventArgs e)
     {
         if (DatabaseConnection is null)
         {
-            MessageBox.Show("Es wird eine Datenbankverbindung benötigt.", "Reports", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            MessageBox.Show(this, "Es muss eine Datenbank geöffnet sein!", "Export XML", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             return;
         }
 
-        using (FormReports frmReports = new FormReports(DatabaseConnection))
-        {
-            frmReports.StartPosition = FormStartPosition.CenterParent;
-            frmReports.ShowDialog(this);
-        }
-    }
+        string exportFolder = string.Empty;
 
-    private void FormMain_FormClosing(object sender, FormClosingEventArgs e)
-    {
-        DatabaseConnection?.Close();
+        using (FolderBrowserDialog dlgSelectFolder = new FolderBrowserDialog())
+        {
+            dlgSelectFolder.Description = "Speicherort für XML-Dokumente";
+            dlgSelectFolder.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+            dlgSelectFolder.Multiselect = false;
+            dlgSelectFolder.ShowHiddenFiles = false;
+            dlgSelectFolder.ShowNewFolderButton = true;
+            dlgSelectFolder.ShowPinnedPlaces = false;
+            dlgSelectFolder.UseDescriptionForTitle = true;
+
+            if (dlgSelectFolder.ShowDialog(this) == DialogResult.OK)
+            {
+                exportFolder = dlgSelectFolder.SelectedPath;
+            }
+        }
+
+        if (!Directory.Exists(exportFolder))
+        {
+            MessageBox.Show(this, "Das Exportverzeichnis ist nicht vorhanden!", "Export XML", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return;
+        }
+
+        var documents = DatabaseConnection.Query("SELECT id, data FROM feedback");
+
+        foreach (var document in documents)
+        {
+            string exportFilePath = Path.Combine(exportFolder, document.id + ".xml");
+            XmlDocument documentXml = new XmlDocument();
+            documentXml.LoadXml(document.data);
+            documentXml.Save(exportFilePath);
+        }
     }
 }

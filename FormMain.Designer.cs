@@ -37,8 +37,9 @@ namespace DMARCReportAnalyzer
             OpenDatabaseToolStripMenuItem = new ToolStripMenuItem();
             importToolStripMenuItem = new ToolStripMenuItem();
             reportsToolStripMenuItem = new ToolStripMenuItem();
-            ButtonExportXML = new Button();
-            ButtonImportXML = new Button();
+            xMLToolStripMenuItem = new ToolStripMenuItem();
+            importToolStripMenuItem1 = new ToolStripMenuItem();
+            exportToolStripMenuItem = new ToolStripMenuItem();
             StatusStripMain = new StatusStrip();
             ToolStripStatusLabelDatabaseName = new ToolStripStatusLabel();
             ToolStripStatusLabelReportCount = new ToolStripStatusLabel();
@@ -82,7 +83,7 @@ namespace DMARCReportAnalyzer
             // 
             // MenuStripMain
             // 
-            MenuStripMain.Items.AddRange(new ToolStripItem[] { datenbankToolStripMenuItem, importToolStripMenuItem, reportsToolStripMenuItem });
+            MenuStripMain.Items.AddRange(new ToolStripItem[] { datenbankToolStripMenuItem, importToolStripMenuItem, reportsToolStripMenuItem, xMLToolStripMenuItem });
             MenuStripMain.Location = new Point(0, 0);
             MenuStripMain.Name = "MenuStripMain";
             MenuStripMain.Size = new Size(1307, 24);
@@ -123,25 +124,26 @@ namespace DMARCReportAnalyzer
             reportsToolStripMenuItem.Text = "Reports";
             reportsToolStripMenuItem.Click += reportsToolStripMenuItem_Click;
             // 
-            // ButtonExportXML
+            // xMLToolStripMenuItem
             // 
-            ButtonExportXML.Location = new Point(1220, 27);
-            ButtonExportXML.Name = "ButtonExportXML";
-            ButtonExportXML.Size = new Size(75, 23);
-            ButtonExportXML.TabIndex = 7;
-            ButtonExportXML.Text = "Export XML";
-            ButtonExportXML.UseVisualStyleBackColor = true;
-            ButtonExportXML.Click += ButtonExportXML_Click;
+            xMLToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { importToolStripMenuItem1, exportToolStripMenuItem });
+            xMLToolStripMenuItem.Name = "xMLToolStripMenuItem";
+            xMLToolStripMenuItem.Size = new Size(43, 20);
+            xMLToolStripMenuItem.Text = "XML";
             // 
-            // ButtonImportXML
+            // importToolStripMenuItem1
             // 
-            ButtonImportXML.Location = new Point(1134, 27);
-            ButtonImportXML.Name = "ButtonImportXML";
-            ButtonImportXML.Size = new Size(80, 23);
-            ButtonImportXML.TabIndex = 8;
-            ButtonImportXML.Text = "Import XML";
-            ButtonImportXML.UseVisualStyleBackColor = true;
-            ButtonImportXML.Click += ButtonImportXML_Click;
+            importToolStripMenuItem1.Name = "importToolStripMenuItem1";
+            importToolStripMenuItem1.Size = new Size(110, 22);
+            importToolStripMenuItem1.Text = "Import";
+            importToolStripMenuItem1.Click += importToolStripMenuItem1_Click;
+            // 
+            // exportToolStripMenuItem
+            // 
+            exportToolStripMenuItem.Name = "exportToolStripMenuItem";
+            exportToolStripMenuItem.Size = new Size(110, 22);
+            exportToolStripMenuItem.Text = "Export";
+            exportToolStripMenuItem.Click += exportToolStripMenuItem_Click;
             // 
             // StatusStripMain
             // 
@@ -241,8 +243,6 @@ namespace DMARCReportAnalyzer
             Controls.Add(DateTimePickerStart);
             Controls.Add(PlotMessagesOverTime);
             Controls.Add(StatusStripMain);
-            Controls.Add(ButtonImportXML);
-            Controls.Add(ButtonExportXML);
             Controls.Add(DataGridViewSenderOverview);
             Controls.Add(MenuStripMain);
             MainMenuStrip = MenuStripMain;
@@ -265,8 +265,6 @@ namespace DMARCReportAnalyzer
         private ToolStripMenuItem OpenDatabaseToolStripMenuItem;
         private ToolStripMenuItem NewDatabaseToolStripMenuItem;
         private ToolStripMenuItem importToolStripMenuItem;
-        private Button ButtonExportXML;
-        private Button ButtonImportXML;
         private DataGridViewTextBoxColumn dgvSenderOverview_SourceIp;
         private DataGridViewTextBoxColumn dgvSenderOverview_MessageCount;
         private StatusStrip StatusStripMain;
@@ -280,5 +278,8 @@ namespace DMARCReportAnalyzer
         private ScottPlot.WinForms.FormsPlot PlotDKIM;
         private ScottPlot.WinForms.FormsPlot PlotSPF;
         private ToolStripMenuItem reportsToolStripMenuItem;
+        private ToolStripMenuItem xMLToolStripMenuItem;
+        private ToolStripMenuItem importToolStripMenuItem1;
+        private ToolStripMenuItem exportToolStripMenuItem;
     }
 }
