@@ -350,6 +350,8 @@ public partial class FormMain : Form
             frmImport.StartPosition = FormStartPosition.CenterParent;
             frmImport.ShowDialog(this);
         }
+
+        LoadDatabase();
     }
 
     private void DateTimePickerStart_ValueChanged(object sender, EventArgs e)
