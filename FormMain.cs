@@ -12,6 +12,7 @@ namespace DMARCReportAnalyzer;
 public partial class FormMain : Form
 {
     private DbConnection? DatabaseConnection;
+    private bool IsInitialization = false;
 
     public FormMain()
     {
@@ -122,8 +123,10 @@ public partial class FormMain : Form
         }
 
         DateTime begin = dateRange.report_end.Value.AddDays(-7);
+        IsInitialization = true;
         DateTimePickerStart.Value = begin;
         DateTimePickerEnd.Value = dateRange.report_end.Value;
+        IsInitialization = false;
 
         int reportCount = DatabaseConnection.QuerySingleOrDefault<int>("SELECT COUNT(id) FROM feedback");
         ToolStripStatusLabelReportCount.Text = reportCount + " Reports";
@@ -225,7 +228,7 @@ public partial class FormMain : Form
         PlotMessagesOverTime.Plot.Axes.Bottom.MinimumSize = 120;
 
         PlotMessagesOverTime.Refresh();
-
+        
         IEnumerable<DKIMSPF> datas = Enumerable.Empty<DKIMSPF>();
 
         if (begin is null || end is null)
@@ -351,17 +354,24 @@ public partial class FormMain : Form
 
     private void DateTimePickerStart_ValueChanged(object sender, EventArgs e)
     {
+        if (DatabaseConnection is null || IsInitialization)
+        {
+            return;
+        }
+
         LoadSenderOverview(DateTimePickerStart.Value, DateTimePickerEnd.Value);
         LoadPlotMessagesOverTime(DateTimePickerStart.Value, DateTimePickerEnd.Value);
     }
 
     private void DateTimePickerEnd_ValueChanged(object sender, EventArgs e)
     {
-        if (DatabaseConnection is not null)
+        if (DatabaseConnection is null || IsInitialization)
         {
-            LoadSenderOverview(DateTimePickerStart.Value, DateTimePickerEnd.Value);
-            LoadPlotMessagesOverTime(DateTimePickerStart.Value, DateTimePickerEnd.Value);
+            return;
         }
+
+        LoadSenderOverview(DateTimePickerStart.Value, DateTimePickerEnd.Value);
+        LoadPlotMessagesOverTime(DateTimePickerStart.Value, DateTimePickerEnd.Value);
     }
 
     private void reportsToolStripMenuItem_Click(object sender, EventArgs e)
