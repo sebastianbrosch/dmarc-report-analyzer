@@ -1,4 +1,5 @@
 # DMARC Report Analyzer
+A tool to import and visualize DMARC reports.
 
 ## DMARC
 
