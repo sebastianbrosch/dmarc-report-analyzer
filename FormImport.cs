@@ -177,6 +177,11 @@ public partial class FormImport : Form
     {
         try
         {
+            if (folder.ToUpper().Trim() == "[INBOX]")
+            {
+                return client.Inbox;
+            }
+
             MailKit.FolderNamespace? firstPersonalNamespace = client.PersonalNamespaces.FirstOrDefault<MailKit.FolderNamespace>();
 
             if (firstPersonalNamespace is null)
