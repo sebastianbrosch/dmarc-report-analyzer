@@ -1,3 +1,4 @@
+using Dapper;
 using DMARCReportAnalyzer.Decompression;
 using DMARCReportAnalyzer.DMARC;
 using MailKit;
@@ -22,17 +23,43 @@ struct ComboBoxItemPort
     public int Value { get; set; }
 }
 
+struct MailboxList
+{
+    public string Id { get; set; }
+    public string Name { get; set; }
+}
+
+struct MailboxItem
+{
+    public string Id { get; set; }
+    public string Name { get; set; }
+    public string Server { get; set; }
+    public int Port { get; set; }
+    public string Username { get; set; }
+    public int Encryption { get; set; }
+    public string Source { get; set; }
+    public string? Archive { get; set; }
+    public bool? MarkAsRead { get; set; }
+    public bool? DeleteMessage { get; set; }
+}
+
 /// <summary>
 /// Form to import DMARC reports to the database.
 /// </summary>
 public partial class FormImport : Form
 {
+    bool IsInitialization = false;
+
+    string MailboxId = string.Empty;
+
     /// <summary>
     /// The database connection.
     /// </summary>
     private readonly IDbConnection Connection;
 
-    
+
+    const string NEW_ENTRY = "[New Entry]";
+
 
 
 
@@ -81,7 +108,7 @@ public partial class FormImport : Form
         control.DataSource = listPort;
         control.ValueMember = "Value";
         control.DisplayMember = "Text";
-        
+
         if (listPort.Exists(port => port.Value == defaultValue))
         {
             control.SelectedValue = defaultValue;
@@ -183,7 +210,7 @@ public partial class FormImport : Form
         string username = txtUsername.Text.Trim();
         string password = txtPassword.Text;
         string serverPort = cmbServerPort.Text;
-        
+
         if (string.IsNullOrWhiteSpace(server))
         {
             MessageBox.Show(this, "Server was not specified.", this.Text, MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -280,7 +307,7 @@ public partial class FormImport : Form
         }
 
         sourceFolder.Open(GetFolderAccess(sourceFolder, archiveFolder));
-       
+
         IList<MailKit.UniqueId> messageUIds = sourceFolder.Search(MailKit.Search.SearchQuery.All);
         Log.Information("Count of messages: {count}", messageUIds.Count);
 
@@ -310,7 +337,7 @@ public partial class FormImport : Form
             Log.Information("Current message: {@message}", new { message.Subject, message.Date, message.MessageId });
             Log.Information("Count of archive files with DMARC report: {count}", reportPaths.Count);
             cleanupFiles.AddRange(reportPaths);
-        
+
             foreach (string reportPath in reportPaths)
             {
                 if (!File.Exists(reportPath))
@@ -464,5 +491,116 @@ public partial class FormImport : Form
         }
 
         return reports;
+    }
+
+    private void FillComboBoxMailbox()
+    {
+        List<MailboxList> mailboxes = Connection.Query<MailboxList>("SELECT id, name FROM mailbox").ToList<MailboxList>();
+        mailboxes.Add(new MailboxList { Id = string.Empty, Name = NEW_ENTRY });
+
+        IsInitialization = true;
+        cmbName.DataSource = mailboxes;
+        cmbName.DisplayMember = "Name";
+        cmbName.ValueMember = "Id";
+        IsInitialization = false;
+
+        if (mailboxes.Count > 0)
+        {
+            cmbName.SelectedValue = mailboxes.First<MailboxList>().Id;
+        }
+
+        LoadMailbox();
+    }
+
+    private void FormImport_Load(object sender, EventArgs e)
+    {
+        FillComboBoxMailbox();
+    }
+
+    private void LoadMailbox()
+    {
+        MailboxId = (string)cmbName.SelectedValue!;
+
+        if (!string.IsNullOrWhiteSpace(MailboxId))
+        {
+            MailboxItem mailbox = Connection.QueryFirst<MailboxItem>("SELECT id, name, server, port, username, encryption, source, archive, mark_as_read AS MarkAsRead, delete_message AS DeleteMessage FROM mailbox WHERE id = @id", new { id = MailboxId });
+
+            txtIncomingServer.Text = mailbox.Server;
+            cmbServerPort.Text = mailbox.Port.ToString();
+            txtUsername.Text = mailbox.Username;
+            cmbEncryption.SelectedValue = Enum.Parse(typeof(MailKit.Security.SecureSocketOptions), mailbox.Encryption.ToString());
+            txtSourceFolder.Text = mailbox.Source;
+            txtArchiveFolder.Text = mailbox.Archive;
+            chkMarkAsRead.CheckState = mailbox.MarkAsRead is null ? CheckState.Unchecked : (mailbox.MarkAsRead == true ? CheckState.Checked : CheckState.Unchecked);
+            chkDeleteMessage.CheckState = mailbox.DeleteMessage is null ? CheckState.Unchecked : (mailbox.DeleteMessage == true ? CheckState.Checked : CheckState.Unchecked);
+        }
+        else
+        {
+            txtIncomingServer.Text = string.Empty;
+            cmbServerPort.SelectedValue = 993;
+            txtUsername.Text = string.Empty;
+            cmbEncryption.SelectedValue = MailKit.Security.SecureSocketOptions.SslOnConnect;
+            txtSourceFolder.Text = string.Empty;
+            txtArchiveFolder.Text = string.Empty;
+            chkMarkAsRead.CheckState = CheckState.Unchecked;
+            chkDeleteMessage.CheckState = CheckState.Unchecked;
+        }
+    }
+
+    private void SaveMailbox()
+    {
+        MailboxItem mailbox;
+
+        if (cmbName.Text == string.Empty)
+        {
+            MessageBox.Show(this, "No name was specified for the mailbox.", this.Text, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(MailboxId))
+        {
+            mailbox = new MailboxItem();
+            mailbox.Id = Guid.NewGuid().ToString("N").ToUpper();
+            mailbox.Name = cmbName.Text;
+            mailbox.Server = txtIncomingServer.Text.Trim();
+            mailbox.Port = int.Parse(cmbServerPort.Text);
+            mailbox.Username = txtUsername.Text.Trim();
+            mailbox.Encryption = Convert.ToInt32(cmbEncryption.SelectedValue!);
+            mailbox.Source = txtSourceFolder.Text.Trim();
+            mailbox.Archive = txtArchiveFolder.Text.Trim();
+            mailbox.MarkAsRead = chkMarkAsRead.CheckState == CheckState.Checked;
+            mailbox.DeleteMessage = chkDeleteMessage.CheckState == CheckState.Checked;
+            Connection.Execute("INSERT INTO mailbox (id, name, server, port, username, encryption, source, archive, mark_as_read, delete_message) VALUES (@Id, @Name, @Server, @Port, @Username, @Encryption, @Source, @Archive, @MarkAsRead, @DeleteMessage)", mailbox);
+        }
+        else
+        {
+            mailbox = new MailboxItem();
+            mailbox.Id = MailboxId;
+            mailbox.Name = cmbName.Text;
+            mailbox.Server = txtIncomingServer.Text.Trim();
+            mailbox.Port = int.Parse(cmbServerPort.Text);
+            mailbox.Username = txtUsername.Text.Trim();
+            mailbox.Encryption = Convert.ToInt32(cmbEncryption.SelectedValue!);
+            mailbox.Source = txtSourceFolder.Text.Trim();
+            mailbox.Archive = txtArchiveFolder.Text.Trim();
+            mailbox.MarkAsRead = chkMarkAsRead.CheckState == CheckState.Checked;
+            mailbox.DeleteMessage = chkDeleteMessage.CheckState == CheckState.Checked;
+            Connection.Execute("UPDATE mailbox SET name = @Name, server = @Server, port = @Port, username = @Username, encryption = @Encryption, source = @Source, archive = @Archive, mark_as_read = @MarkAsRead, delete_message = @DeleteMessage WHERE id = @Id", mailbox);
+        }
+
+        FillComboBoxMailbox();
+        cmbName.SelectedValue = mailbox.Id;
+        LoadMailbox();
+
+    }
+
+    private void btnSave_Click(object sender, EventArgs e)
+    {
+        SaveMailbox();
+    }
+
+    private void cmbName_SelectionChangeCommitted(object sender, EventArgs e)
+    {
+        LoadMailbox();
     }
 }

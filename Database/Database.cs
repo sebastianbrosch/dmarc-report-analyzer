@@ -183,6 +183,19 @@ public class Database
               human_result VARCHAR(255) NULL,
               FOREIGN KEY (record_id) REFERENCES record(id)
             );
+            CREATE TABLE IF NOT EXISTS mailbox (
+              id VARCHAR(32) NOT NULL,
+              name VARCHAR(60) NOT NULL,
+              server VARCHAR(100) NOT NULL,
+              port INTEGER NOT NULL,
+              username VARCHAR(100) NOT NULL,
+              encryption INTEGER NOT NULL,
+              source VARCHAR(100) NOT NULL,
+              archive VARCHAR(100) NULL,
+              mark_as_read BIT NOT NULL DEFAULT 0,
+              delete_message BIT NOT NULL DEFAULT 0,
+              PRIMARY KEY (id)
+            );
             CREATE VIEW metadata_expansion
             AS
             SELECT feedback_id,
