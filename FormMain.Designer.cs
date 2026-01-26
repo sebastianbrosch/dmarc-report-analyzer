@@ -50,6 +50,8 @@ namespace DMARCReportAnalyzer
             LabelEnd = new Label();
             PlotDKIM = new ScottPlot.WinForms.FormsPlot();
             PlotSPF = new ScottPlot.WinForms.FormsPlot();
+            lblDKIM_Information = new Label();
+            lblSPF_Information = new Label();
             ((System.ComponentModel.ISupportInitialize)DataGridViewSenderOverview).BeginInit();
             MenuStripMain.SuspendLayout();
             StatusStripMain.SuspendLayout();
@@ -218,7 +220,7 @@ namespace DMARCReportAnalyzer
             PlotDKIM.DisplayScale = 1F;
             PlotDKIM.Location = new Point(12, 444);
             PlotDKIM.Name = "PlotDKIM";
-            PlotDKIM.Size = new Size(639, 348);
+            PlotDKIM.Size = new Size(639, 314);
             PlotDKIM.TabIndex = 15;
             // 
             // PlotSPF
@@ -227,14 +229,32 @@ namespace DMARCReportAnalyzer
             PlotSPF.DisplayScale = 1F;
             PlotSPF.Location = new Point(657, 444);
             PlotSPF.Name = "PlotSPF";
-            PlotSPF.Size = new Size(638, 348);
+            PlotSPF.Size = new Size(638, 314);
             PlotSPF.TabIndex = 16;
+            // 
+            // lblDKIM_Information
+            // 
+            lblDKIM_Information.Location = new Point(12, 761);
+            lblDKIM_Information.Name = "lblDKIM_Information";
+            lblDKIM_Information.Size = new Size(639, 21);
+            lblDKIM_Information.TabIndex = 17;
+            lblDKIM_Information.TextAlign = ContentAlignment.MiddleCenter;
+            // 
+            // lblSPF_Information
+            // 
+            lblSPF_Information.Location = new Point(657, 761);
+            lblSPF_Information.Name = "lblSPF_Information";
+            lblSPF_Information.Size = new Size(638, 21);
+            lblSPF_Information.TabIndex = 18;
+            lblSPF_Information.TextAlign = ContentAlignment.MiddleCenter;
             // 
             // FormMain
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1307, 819);
+            Controls.Add(lblSPF_Information);
+            Controls.Add(lblDKIM_Information);
             Controls.Add(PlotSPF);
             Controls.Add(PlotDKIM);
             Controls.Add(LabelEnd);
@@ -281,5 +301,7 @@ namespace DMARCReportAnalyzer
         private ToolStripMenuItem xMLToolStripMenuItem;
         private ToolStripMenuItem importToolStripMenuItem1;
         private ToolStripMenuItem exportToolStripMenuItem;
+        private Label lblDKIM_Information;
+        private Label lblSPF_Information;
     }
 }

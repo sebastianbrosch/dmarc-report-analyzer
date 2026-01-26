@@ -272,11 +272,22 @@ public partial class FormMain : Form
         ScottPlot.Palettes.Category10 palette = new();
         List<Bar> bars = new();
 
+        int sum_pass = 0;
+        int sum_fail = 0;
+
         foreach (DKIMSPF data in datas)
         {
+            sum_pass += data.dkim_pass_count;
+            sum_fail += data.dkim_fail_count;
+
             bars.Add(new() { Position = data.report_date.ToOADate(), ValueBase = 0, Value = data.dkim_pass_count, FillColor = palette.GetColor(0) });
             bars.Add(new() { Position = data.report_date.ToOADate(), ValueBase = data.dkim_pass_count, Value = data.dkim_fail_count + data.dkim_pass_count, FillColor = palette.GetColor(1) });
         }
+
+        decimal pass_percentage = (decimal) sum_pass / (sum_pass + sum_fail) * 100;
+        decimal fail_percentage = 100 - pass_percentage;
+
+        lblDKIM_Information.Text = "Pass: " + string.Format("{0:0.##}", pass_percentage) + "% - Fail: " + string.Format("{0:0.##}", fail_percentage) + "%";
 
         plot.Plot.Add.Bars(bars);
 
@@ -291,7 +302,7 @@ public partial class FormMain : Form
 
         plot.Plot.Axes.Bottom.TickLabelStyle.Rotation = 90;
         plot.Plot.Axes.Bottom.TickLabelStyle.Alignment = Alignment.MiddleLeft;
-        plot.Plot.Axes.Bottom.MinimumSize = 120;
+        plot.Plot.Axes.Bottom.MinimumSize = 80;
 
         plot.Plot.Legend.IsVisible = true;
         plot.Plot.Legend.Alignment = Alignment.UpperLeft;
@@ -307,11 +318,22 @@ public partial class FormMain : Form
         ScottPlot.Palettes.Category10 palette = new();
         List<Bar> bars = new();
 
+        int sum_pass = 0;
+        int sum_fail = 0;
+
         foreach (DKIMSPF data in datas)
         {
+            sum_pass += data.spf_pass_count;
+            sum_fail += data.spf_fail_count;
+
             bars.Add(new() { Position = data.report_date.ToOADate(), ValueBase = 0, Value = data.spf_pass_count, FillColor = palette.GetColor(0) });
             bars.Add(new() { Position = data.report_date.ToOADate(), ValueBase = data.spf_pass_count, Value = data.spf_fail_count + data.spf_pass_count, FillColor = palette.GetColor(1) });
         }
+
+        decimal pass_percentage = (decimal)sum_pass / (sum_pass + sum_fail) * 100;
+        decimal fail_percentage = 100 - pass_percentage;
+
+        lblSPF_Information.Text = "Pass: " + string.Format("{0:0.##}", pass_percentage) + "% - Fail: " + string.Format("{0:0.##}", fail_percentage) + "%";
 
         plot.Plot.Add.Bars(bars);
 
@@ -326,7 +348,7 @@ public partial class FormMain : Form
 
         plot.Plot.Axes.Bottom.TickLabelStyle.Rotation = 90;
         plot.Plot.Axes.Bottom.TickLabelStyle.Alignment = Alignment.MiddleLeft;
-        plot.Plot.Axes.Bottom.MinimumSize = 120;
+        plot.Plot.Axes.Bottom.MinimumSize = 80;
 
         plot.Plot.Legend.IsVisible = true;
         plot.Plot.Legend.Alignment = Alignment.UpperLeft;
