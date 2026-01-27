@@ -1,6 +1,5 @@
 using Dapper;
 using System.Data;
-using System.Diagnostics;
 
 namespace DMARCReportAnalyzer;
 
@@ -24,10 +23,10 @@ public partial class FormReports : Form
         dtReports.Load(reader);
 
         dgvReportsOverview.AutoGenerateColumns = false;
-        dgvReportsOverview.EnableHeadersVisualStyles = false;
         dgvReportsOverview.ReadOnly = true;
         dgvReportsOverview.DataSource = dtReports;
         dgvReportsOverview.Sort(dgvReportsOverview_ReportBegin, System.ComponentModel.ListSortDirection.Ascending);
+        dgvReportsOverview.ColumnHeadersDefaultCellStyle.SelectionBackColor = dgvReportsOverview.ColumnHeadersDefaultCellStyle.BackColor;
     }
 
     private void LoadReportDetails(string id)

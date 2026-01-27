@@ -92,6 +92,7 @@ namespace DMARCReportAnalyzer
             dataGridViewCellStyle3.SelectionForeColor = SystemColors.HighlightText;
             dataGridViewCellStyle3.WrapMode = DataGridViewTriState.False;
             dgvReportsOverview.DefaultCellStyle = dataGridViewCellStyle3;
+            dgvReportsOverview.EnableHeadersVisualStyles = false;
             dgvReportsOverview.Location = new Point(12, 12);
             dgvReportsOverview.MultiSelect = false;
             dgvReportsOverview.Name = "dgvReportsOverview";
@@ -225,7 +226,6 @@ namespace DMARCReportAnalyzer
             txtReportEnd.Name = "txtReportEnd";
             txtReportEnd.Size = new Size(110, 23);
             txtReportEnd.TabIndex = 3;
-            txtReportEnd.Text = "20.02.2025 23:00:00";
             // 
             // txtReportBegin
             // 
@@ -233,7 +233,6 @@ namespace DMARCReportAnalyzer
             txtReportBegin.Name = "txtReportBegin";
             txtReportBegin.Size = new Size(110, 23);
             txtReportBegin.TabIndex = 2;
-            txtReportBegin.Text = "20.02.2025 23:00:00";
             // 
             // lblOrganization
             // 
