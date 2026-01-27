@@ -140,7 +140,38 @@ public partial class FormMain : Form
         ToolStripStatusLabelDatabaseName.Visible = true;
 
         LoadSenderOverview(DateTimePickerStart.Value, DateTimePickerEnd.Value);
+        LoadReportOverview(DateTimePickerStart.Value, DateTimePickerEnd.Value);
         LoadPlotMessagesOverTime(DateTimePickerStart.Value, DateTimePickerEnd.Value);
+    }
+
+    private void LoadReportOverview(DateTime? begin, DateTime? end)
+    {
+        if (DatabaseConnection is null)
+        {
+            return;
+        }
+
+        IDataReader reader;
+
+        if (begin is null || end is null)
+        {
+            reader = DatabaseConnection.ExecuteReader("SELECT m.organization, SUM(count) AS message_count FROM record r INNER JOIN metadata m ON r.feedback_id = m.feedback_id INNER JOIN metadata_expansion me ON r.feedback_id = me.feedback_id GROUP BY m.organization");
+        }
+        else
+        {
+            reader = DatabaseConnection.ExecuteReader("SELECT m.organization, SUM(count) AS message_count FROM record r INNER JOIN metadata m ON r.feedback_id = m.feedback_id INNER JOIN metadata_expansion me ON r.feedback_id = me.feedback_id WHERE me.report_date BETWEEN @begin AND @end GROUP BY m.organization", new { begin = begin, end = end });
+        }
+
+        DataSet dsReporterOverview = new DataSet();
+        dsReporterOverview.EnforceConstraints = false;
+        DataTable dtReporterOverview = dsReporterOverview.Tables.Add("reporter");
+
+        dtReporterOverview.Load(reader);
+        dgvReporterOverview.AutoGenerateColumns = false;
+        dgvReporterOverview.ReadOnly = true;
+        dgvReporterOverview.DataSource = dtReporterOverview;
+        dgvReporterOverview.Sort(dgvReporterOverview_MessageCount, System.ComponentModel.ListSortDirection.Descending);
+        dgvReporterOverview.ColumnHeadersDefaultCellStyle.SelectionBackColor = dgvReporterOverview.ColumnHeadersDefaultCellStyle.BackColor;
     }
 
     private void LoadSenderOverview(DateTime? begin, DateTime? end)
@@ -170,6 +201,7 @@ public partial class FormMain : Form
         DataGridViewSenderOverview.ReadOnly = true;
         DataGridViewSenderOverview.DataSource = dtSenderOverview;
         DataGridViewSenderOverview.Sort(dgvSenderOverview_MessageCount, System.ComponentModel.ListSortDirection.Descending);
+        DataGridViewSenderOverview.ColumnHeadersDefaultCellStyle.SelectionBackColor = DataGridViewSenderOverview.ColumnHeadersDefaultCellStyle.BackColor;
     }
 
     private void LoadPlotMessagesOverTime(DateTime? begin, DateTime? end)
@@ -396,6 +428,7 @@ public partial class FormMain : Form
         }
 
         LoadSenderOverview(DateTimePickerStart.Value, DateTimePickerEnd.Value);
+        LoadReportOverview(DateTimePickerStart.Value, DateTimePickerEnd.Value);
         LoadPlotMessagesOverTime(DateTimePickerStart.Value, DateTimePickerEnd.Value);
     }
 
@@ -407,6 +440,7 @@ public partial class FormMain : Form
         }
 
         LoadSenderOverview(DateTimePickerStart.Value, DateTimePickerEnd.Value);
+        LoadReportOverview(DateTimePickerStart.Value, DateTimePickerEnd.Value);
         LoadPlotMessagesOverTime(DateTimePickerStart.Value, DateTimePickerEnd.Value);
     }
 
