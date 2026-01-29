@@ -12,7 +12,13 @@ namespace DMARCReportAnalyzer;
 
 public partial class FormMain : Form
 {
-    private DbConnection? DatabaseConnection;
+    /// <summary>
+    /// The database connection to the currently open database.
+    /// </summary>
+    private DbConnection? Connection;
+
+
+
     private bool IsInitialization = false;
 
     public FormMain()
@@ -45,6 +51,24 @@ public partial class FormMain : Form
         public int spf_fail_count;
     }
 
+    private bool SetConnection(string path, bool create)
+    {
+        if (!create && !File.Exists(path))
+        {
+            return false;
+        }
+
+        System.Data.SQLite.SQLiteConnectionStringBuilder builder = new();
+        builder.DataSource = path;
+        builder.Version = 3;
+        builder.FailIfMissing = !create;
+
+        Connection = new SQLiteConnection(builder.ConnectionString);
+        Connection.Open();
+
+        return true;
+    }
+
     private void OpenDatabaseToolStripMenuItem_Click(object sender, EventArgs e)
     {
         using (OpenFileDialog dlgOpenDatabase = new OpenFileDialog())
@@ -65,8 +89,7 @@ public partial class FormMain : Form
 
             if (dlgOpenDatabase.ShowDialog() == DialogResult.OK && File.Exists(dlgOpenDatabase.FileName))
             {
-                DatabaseConnection = new SQLiteConnection("Data Source=" + dlgOpenDatabase.FileName + "; Version=3;FailIfMissing=True;");
-                DatabaseConnection.Open();
+                SetConnection(dlgOpenDatabase.FileName, false);
             }
         }
 
@@ -98,11 +121,18 @@ public partial class FormMain : Form
                     return;
                 }
 
-                DatabaseConnection = new SQLiteConnection("Data Source=" + dlgNewDatabase.FileName + "; Version=3;");
-                DatabaseConnection.Open();
-
-                DMARCReportAnalyzer.Database.Database database = new DMARCReportAnalyzer.Database.Database(DatabaseConnection);
-                database.InitializeDatabase();
+                if (SetConnection(dlgNewDatabase.FileName, true))
+                {
+                    if (Connection is not null)
+                    {
+                        DMARCReportAnalyzer.Database.Database database = new DMARCReportAnalyzer.Database.Database(Connection);
+                        database.InitializeDatabase();
+                    }
+                }
+                else
+                {
+                    MessageBox.Show(this, "The connection to the selected database could not be established.", this.Text, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
             }
         }
 
@@ -111,12 +141,23 @@ public partial class FormMain : Form
 
     private void LoadDatabase()
     {
-        if (DatabaseConnection is null)
+        if (Connection is null)
         {
             return;
         }
 
-        ReportsTimeSpan dateRange = DatabaseConnection.QuerySingle<ReportsTimeSpan>("SELECT DATE(MIN(report_begin)) report_begin, DATE(MAX(report_end)) report_end FROM metadata");
+        int reportCount = Connection.QuerySingleOrDefault<int>("SELECT COUNT(id) FROM feedback");
+        ToolStripStatusLabelReportCount.Text = reportCount + " Reports";
+
+        StatusStripMain.ShowItemToolTips = true;
+        string databaseFilePath = ((SQLiteConnection)Connection).FileName;
+        ToolStripStatusLabelDatabaseName.Text = Path.GetFileName(databaseFilePath);
+        ToolStripStatusLabelDatabaseName.ToolTipText = databaseFilePath;
+
+        ToolStripStatusLabelReportCount.Visible = true;
+        ToolStripStatusLabelDatabaseName.Visible = true;
+
+        ReportsTimeSpan dateRange = Connection.QuerySingle<ReportsTimeSpan>("SELECT DATE(MIN(report_begin)) report_begin, DATE(MAX(report_end)) report_end FROM metadata");
 
         if (dateRange.report_begin is null || dateRange.report_end is null)
         {
@@ -129,17 +170,6 @@ public partial class FormMain : Form
         DateTimePickerEnd.Value = dateRange.report_end.Value;
         IsInitialization = false;
 
-        int reportCount = DatabaseConnection.QuerySingleOrDefault<int>("SELECT COUNT(id) FROM feedback");
-        ToolStripStatusLabelReportCount.Text = reportCount + " Reports";
-
-        StatusStripMain.ShowItemToolTips = true;
-        string databaseFilePath = ((SQLiteConnection)DatabaseConnection).FileName;
-        ToolStripStatusLabelDatabaseName.Text = Path.GetFileName(databaseFilePath);
-        ToolStripStatusLabelDatabaseName.ToolTipText = databaseFilePath;
-
-        ToolStripStatusLabelReportCount.Visible = true;
-        ToolStripStatusLabelDatabaseName.Visible = true;
-
         LoadSenderOverview(DateTimePickerStart.Value, DateTimePickerEnd.Value);
         LoadReportOverview(DateTimePickerStart.Value, DateTimePickerEnd.Value);
         LoadPlotMessagesOverTime(DateTimePickerStart.Value, DateTimePickerEnd.Value);
@@ -147,7 +177,7 @@ public partial class FormMain : Form
 
     private void LoadReportOverview(DateTime? begin, DateTime? end)
     {
-        if (DatabaseConnection is null)
+        if (Connection is null)
         {
             return;
         }
@@ -159,11 +189,11 @@ public partial class FormMain : Form
 
         if (string.IsNullOrWhiteSpace(beginSQL) || string.IsNullOrWhiteSpace(endSQL))
         {
-            reader = DatabaseConnection.ExecuteReader("SELECT m.organization, SUM(count) AS message_count FROM record r INNER JOIN metadata m ON r.feedback_id = m.feedback_id INNER JOIN metadata_expansion me ON r.feedback_id = me.feedback_id GROUP BY m.organization");
+            reader = Connection.ExecuteReader("SELECT m.organization, SUM(count) AS message_count FROM record r INNER JOIN metadata m ON r.feedback_id = m.feedback_id INNER JOIN metadata_expansion me ON r.feedback_id = me.feedback_id GROUP BY m.organization");
         }
         else
         {
-            reader = DatabaseConnection.ExecuteReader("SELECT m.organization, SUM(count) AS message_count FROM record r INNER JOIN metadata m ON r.feedback_id = m.feedback_id INNER JOIN metadata_expansion me ON r.feedback_id = me.feedback_id WHERE me.report_date BETWEEN @begin AND @end GROUP BY m.organization", new { begin = beginSQL, end = endSQL });
+            reader = Connection.ExecuteReader("SELECT m.organization, SUM(count) AS message_count FROM record r INNER JOIN metadata m ON r.feedback_id = m.feedback_id INNER JOIN metadata_expansion me ON r.feedback_id = me.feedback_id WHERE me.report_date BETWEEN @begin AND @end GROUP BY m.organization", new { begin = beginSQL, end = endSQL });
         }
 
         DataSet dsReporterOverview = new DataSet();
@@ -180,7 +210,7 @@ public partial class FormMain : Form
 
     private void LoadSenderOverview(DateTime? begin, DateTime? end)
     {
-        if (DatabaseConnection is null)
+        if (Connection is null)
         {
             return;
         }
@@ -192,11 +222,11 @@ public partial class FormMain : Form
 
         if (string.IsNullOrWhiteSpace(beginSQL) || string.IsNullOrWhiteSpace(endSQL))
         {
-            reader = DatabaseConnection.ExecuteReader("SELECT source_ip, SUM(r.count) message_count FROM record r GROUP BY source_ip");
+            reader = Connection.ExecuteReader("SELECT source_ip, SUM(r.count) message_count FROM record r GROUP BY source_ip");
         }
         else
         {
-            reader = DatabaseConnection.ExecuteReader("SELECT source_ip, SUM(r.count) message_count FROM record r INNER JOIN metadata_expansion me ON r.feedback_id = me.feedback_id WHERE me.report_date BETWEEN @begin AND @end GROUP BY source_ip", new { begin = beginSQL, end = endSQL });
+            reader = Connection.ExecuteReader("SELECT source_ip, SUM(r.count) message_count FROM record r INNER JOIN metadata_expansion me ON r.feedback_id = me.feedback_id WHERE me.report_date BETWEEN @begin AND @end GROUP BY source_ip", new { begin = beginSQL, end = endSQL });
         }
 
         DataSet dsSenderOverview = new DataSet();
@@ -225,7 +255,7 @@ public partial class FormMain : Form
 
     private void LoadPlotMessagesOverTime(DateTime? begin, DateTime? end)
     {
-        if (DatabaseConnection is null)
+        if (Connection is null)
         {
             return;
         }
@@ -245,7 +275,7 @@ public partial class FormMain : Form
                 INNER JOIN record r ON m.feedback_id = r.feedback_id
               GROUP BY report_date
               ORDER BY report_date ASC";
-            messages = DatabaseConnection.Query<MessageOverTime>(sqlMessagesOverTime);
+            messages = Connection.Query<MessageOverTime>(sqlMessagesOverTime);
         }
         else
         {
@@ -257,7 +287,7 @@ public partial class FormMain : Form
               WHERE report_date BETWEEN @begin AND @end
               GROUP BY report_date
               ORDER BY report_date ASC";
-            messages = DatabaseConnection.Query<MessageOverTime>(sqlMessagesOverTime, new { begin = beginSQL, end = endSQL });
+            messages = Connection.Query<MessageOverTime>(sqlMessagesOverTime, new { begin = beginSQL, end = endSQL });
         }
 
         DateTime[] dataX = messages!.ToList<MessageOverTime>().Select(x => x.report_date).ToArray<DateTime>();
@@ -298,7 +328,7 @@ public partial class FormMain : Form
                 INNER JOIN metadata_expansion me ON r.feedback_id = me.feedback_id 
               GROUP BY me.report_date
               ORDER BY me.report_date ASC";
-            datas = DatabaseConnection.Query<DKIMSPF>(sqlDKIMSPF);
+            datas = Connection.Query<DKIMSPF>(sqlDKIMSPF);
         }
         else
         {
@@ -314,7 +344,7 @@ public partial class FormMain : Form
               WHERE report_date BETWEEN @begin AND @end
               GROUP BY me.report_date
               ORDER BY me.report_date ASC";
-            datas = DatabaseConnection.Query<DKIMSPF>(sqlDKIMSPF, new { begin = beginSQL, end = endSQL });
+            datas = Connection.Query<DKIMSPF>(sqlDKIMSPF, new { begin = beginSQL, end = endSQL });
         }
 
         LoadPlotDKIM(datas, PlotDKIM);
@@ -427,13 +457,13 @@ public partial class FormMain : Form
 
     private void importToolStripMenuItem_Click(object sender, EventArgs e)
     {
-        if (DatabaseConnection is null)
+        if (Connection is null)
         {
-            MessageBox.Show(this, "Es muss eine Datenbank geöffnet sein!", "Import", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            MessageBox.Show(this, "Please open a database first.", this.Text, MessageBoxButtons.OK, MessageBoxIcon.Information);
             return;
         }
 
-        using (FormImport frmImport = new FormImport(DatabaseConnection))
+        using (FormImport frmImport = new FormImport(Connection))
         {
             frmImport.StartPosition = FormStartPosition.CenterParent;
             frmImport.ShowDialog(this);
@@ -444,7 +474,7 @@ public partial class FormMain : Form
 
     private void DateTimePickerStart_ValueChanged(object sender, EventArgs e)
     {
-        if (DatabaseConnection is null || IsInitialization)
+        if (Connection is null || IsInitialization)
         {
             return;
         }
@@ -456,7 +486,7 @@ public partial class FormMain : Form
 
     private void DateTimePickerEnd_ValueChanged(object sender, EventArgs e)
     {
-        if (DatabaseConnection is null || IsInitialization)
+        if (Connection is null || IsInitialization)
         {
             return;
         }
@@ -468,13 +498,13 @@ public partial class FormMain : Form
 
     private void reportsToolStripMenuItem_Click(object sender, EventArgs e)
     {
-        if (DatabaseConnection is null)
+        if (Connection is null)
         {
-            MessageBox.Show("Es wird eine Datenbankverbindung benötigt.", "Reports", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            MessageBox.Show(this, "Please open a database first.", this.Text, MessageBoxButtons.OK, MessageBoxIcon.Information);
             return;
         }
 
-        using (FormReports frmReports = new FormReports(DatabaseConnection))
+        using (FormReports frmReports = new FormReports(Connection))
         {
             frmReports.StartPosition = FormStartPosition.CenterParent;
             frmReports.ShowDialog(this);
@@ -483,14 +513,14 @@ public partial class FormMain : Form
 
     private void FormMain_FormClosing(object sender, FormClosingEventArgs e)
     {
-        DatabaseConnection?.Close();
+        Connection?.Close();
     }
 
     private void importToolStripMenuItem1_Click(object sender, EventArgs e)
     {
-        if (DatabaseConnection is null)
+        if (Connection is null)
         {
-            MessageBox.Show(this, "Es muss eine Datenbank geöffnet sein!", "Import XML", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            MessageBox.Show(this, "Please open a database first.", this.Text, MessageBoxButtons.OK, MessageBoxIcon.Information);
             return;
         }
 
@@ -532,7 +562,7 @@ public partial class FormMain : Form
                 continue;
             }
 
-            IStorage? storage = StorageFactory.Create(feedback, DatabaseConnection);
+            IStorage? storage = StorageFactory.Create(feedback, Connection);
 
             if (storage is null)
             {
@@ -550,9 +580,9 @@ public partial class FormMain : Form
 
     private void exportToolStripMenuItem_Click(object sender, EventArgs e)
     {
-        if (DatabaseConnection is null)
+        if (Connection is null)
         {
-            MessageBox.Show(this, "Es muss eine Datenbank geöffnet sein!", "Export XML", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            MessageBox.Show(this, "Please open a database first.", this.Text, MessageBoxButtons.OK, MessageBoxIcon.Information);
             return;
         }
 
@@ -580,7 +610,7 @@ public partial class FormMain : Form
             return;
         }
 
-        var documents = DatabaseConnection.Query("SELECT id, data FROM feedback");
+        var documents = Connection.Query("SELECT id, data FROM feedback");
 
         foreach (var document in documents)
         {
