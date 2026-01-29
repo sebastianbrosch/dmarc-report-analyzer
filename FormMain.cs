@@ -5,6 +5,7 @@ using ScottPlot.WinForms;
 using System.Data;
 using System.Data.Common;
 using System.Data.SQLite;
+using System.Diagnostics;
 using System.Xml;
 
 namespace DMARCReportAnalyzer;
@@ -153,13 +154,16 @@ public partial class FormMain : Form
 
         IDataReader reader;
 
-        if (begin is null || end is null)
+        string beginSQL = FormatDateForSQL(begin);
+        string endSQL = FormatDateForSQL(end);
+
+        if (string.IsNullOrWhiteSpace(beginSQL) || string.IsNullOrWhiteSpace(endSQL))
         {
             reader = DatabaseConnection.ExecuteReader("SELECT m.organization, SUM(count) AS message_count FROM record r INNER JOIN metadata m ON r.feedback_id = m.feedback_id INNER JOIN metadata_expansion me ON r.feedback_id = me.feedback_id GROUP BY m.organization");
         }
         else
         {
-            reader = DatabaseConnection.ExecuteReader("SELECT m.organization, SUM(count) AS message_count FROM record r INNER JOIN metadata m ON r.feedback_id = m.feedback_id INNER JOIN metadata_expansion me ON r.feedback_id = me.feedback_id WHERE me.report_date BETWEEN @begin AND @end GROUP BY m.organization", new { begin = begin, end = end });
+            reader = DatabaseConnection.ExecuteReader("SELECT m.organization, SUM(count) AS message_count FROM record r INNER JOIN metadata m ON r.feedback_id = m.feedback_id INNER JOIN metadata_expansion me ON r.feedback_id = me.feedback_id WHERE me.report_date BETWEEN @begin AND @end GROUP BY m.organization", new { begin = beginSQL, end = endSQL });
         }
 
         DataSet dsReporterOverview = new DataSet();
@@ -183,13 +187,16 @@ public partial class FormMain : Form
 
         IDataReader reader;
 
-        if (begin is null || end is null)
+        string beginSQL = FormatDateForSQL(begin);
+        string endSQL = FormatDateForSQL(end);
+
+        if (string.IsNullOrWhiteSpace(beginSQL) || string.IsNullOrWhiteSpace(endSQL))
         {
             reader = DatabaseConnection.ExecuteReader("SELECT source_ip, SUM(r.count) message_count FROM record r GROUP BY source_ip");
         }
         else
         {
-            reader = DatabaseConnection.ExecuteReader("SELECT source_ip, SUM(r.count) message_count FROM record r INNER JOIN metadata_expansion me ON r.feedback_id = me.feedback_id WHERE me.report_date BETWEEN @begin AND @end GROUP BY source_ip", new { begin = begin, end = end });
+            reader = DatabaseConnection.ExecuteReader("SELECT source_ip, SUM(r.count) message_count FROM record r INNER JOIN metadata_expansion me ON r.feedback_id = me.feedback_id WHERE me.report_date BETWEEN @begin AND @end GROUP BY source_ip", new { begin = beginSQL, end = endSQL });
         }
 
         DataSet dsSenderOverview = new DataSet();
@@ -197,11 +204,23 @@ public partial class FormMain : Form
         DataTable dtSenderOverview = dsSenderOverview.Tables.Add("senders");
 
         dtSenderOverview.Load(reader);
-        DataGridViewSenderOverview.AutoGenerateColumns = false;
-        DataGridViewSenderOverview.ReadOnly = true;
-        DataGridViewSenderOverview.DataSource = dtSenderOverview;
-        DataGridViewSenderOverview.Sort(dgvSenderOverview_MessageCount, System.ComponentModel.ListSortDirection.Descending);
-        DataGridViewSenderOverview.ColumnHeadersDefaultCellStyle.SelectionBackColor = DataGridViewSenderOverview.ColumnHeadersDefaultCellStyle.BackColor;
+        dgvSenderOverview.AutoGenerateColumns = false;
+        dgvSenderOverview.ReadOnly = true;
+        dgvSenderOverview.DataSource = dtSenderOverview;
+        dgvSenderOverview.Sort(dgvSenderOverview_MessageCount, System.ComponentModel.ListSortDirection.Descending);
+        dgvSenderOverview.ColumnHeadersDefaultCellStyle.SelectionBackColor = dgvSenderOverview.ColumnHeadersDefaultCellStyle.BackColor;
+    }
+
+    private string FormatDateForSQL(DateTime? value)
+    {
+        if (value is not null && value.HasValue)
+        {
+            return value.Value.Date.ToString("yyyy-MM-dd");
+        } 
+        else
+        {
+            return string.Empty;
+        }
     }
 
     private void LoadPlotMessagesOverTime(DateTime? begin, DateTime? end)
@@ -214,7 +233,10 @@ public partial class FormMain : Form
         string sqlMessagesOverTime = string.Empty;
         IEnumerable<MessageOverTime>? messages;
 
-        if (begin is null || end is null)
+        string beginSQL = FormatDateForSQL(begin);
+        string endSQL = FormatDateForSQL(end);
+
+        if (string.IsNullOrWhiteSpace(beginSQL) || string.IsNullOrWhiteSpace(endSQL))
         {
             sqlMessagesOverTime = @"
               SELECT report_date, SUM(r.count) message_count
@@ -235,7 +257,7 @@ public partial class FormMain : Form
               WHERE report_date BETWEEN @begin AND @end
               GROUP BY report_date
               ORDER BY report_date ASC";
-            messages = DatabaseConnection.Query<MessageOverTime>(sqlMessagesOverTime, new { begin = begin, end = end });
+            messages = DatabaseConnection.Query<MessageOverTime>(sqlMessagesOverTime, new { begin = beginSQL, end = endSQL });
         }
 
         DateTime[] dataX = messages!.ToList<MessageOverTime>().Select(x => x.report_date).ToArray<DateTime>();
@@ -260,10 +282,10 @@ public partial class FormMain : Form
         PlotMessagesOverTime.Plot.Axes.Bottom.MinimumSize = 70;
 
         PlotMessagesOverTime.Refresh();
-        
+
         IEnumerable<DKIMSPF> datas = Enumerable.Empty<DKIMSPF>();
 
-        if (begin is null || end is null)
+        if (string.IsNullOrWhiteSpace(beginSQL) || string.IsNullOrWhiteSpace(endSQL))
         {
             string sqlDKIMSPF = @"
               SELECT me.report_date,
@@ -292,7 +314,7 @@ public partial class FormMain : Form
               WHERE report_date BETWEEN @begin AND @end
               GROUP BY me.report_date
               ORDER BY me.report_date ASC";
-            datas = DatabaseConnection.Query<DKIMSPF>(sqlDKIMSPF, new { begin = begin, end = end });
+            datas = DatabaseConnection.Query<DKIMSPF>(sqlDKIMSPF, new { begin = beginSQL, end = endSQL });
         }
 
         LoadPlotDKIM(datas, PlotDKIM);
@@ -566,6 +588,16 @@ public partial class FormMain : Form
             XmlDocument documentXml = new XmlDocument();
             documentXml.LoadXml(document.data);
             documentXml.Save(exportFilePath);
+        }
+    }
+
+    private void mnuItemLogs_Click(object sender, EventArgs e)
+    {
+        string logsFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "DMARC Report Analyzer");
+
+        if (System.IO.Directory.Exists(logsFolder))
+        {
+            Process.Start("explorer.exe", logsFolder);
         }
     }
 }

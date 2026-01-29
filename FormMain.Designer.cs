@@ -34,7 +34,7 @@ namespace DMARCReportAnalyzer
             DataGridViewCellStyle dataGridViewCellStyle4 = new DataGridViewCellStyle();
             DataGridViewCellStyle dataGridViewCellStyle5 = new DataGridViewCellStyle();
             DataGridViewCellStyle dataGridViewCellStyle6 = new DataGridViewCellStyle();
-            DataGridViewSenderOverview = new DataGridView();
+            dgvSenderOverview = new DataGridView();
             dgvSenderOverview_SourceIp = new DataGridViewTextBoxColumn();
             dgvSenderOverview_MessageCount = new DataGridViewTextBoxColumn();
             MenuStripMain = new MenuStrip();
@@ -61,17 +61,18 @@ namespace DMARCReportAnalyzer
             dgvReporterOverview = new DataGridView();
             dgvReporterOverview_Reporter = new DataGridViewTextBoxColumn();
             dgvReporterOverview_MessageCount = new DataGridViewTextBoxColumn();
-            ((System.ComponentModel.ISupportInitialize)DataGridViewSenderOverview).BeginInit();
+            mnuItemLogs = new ToolStripMenuItem();
+            ((System.ComponentModel.ISupportInitialize)dgvSenderOverview).BeginInit();
             MenuStripMain.SuspendLayout();
             StatusStripMain.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dgvReporterOverview).BeginInit();
             SuspendLayout();
             // 
-            // DataGridViewSenderOverview
+            // dgvSenderOverview
             // 
-            DataGridViewSenderOverview.AllowUserToAddRows = false;
-            DataGridViewSenderOverview.AllowUserToDeleteRows = false;
-            DataGridViewSenderOverview.AllowUserToResizeRows = false;
+            dgvSenderOverview.AllowUserToAddRows = false;
+            dgvSenderOverview.AllowUserToDeleteRows = false;
+            dgvSenderOverview.AllowUserToResizeRows = false;
             dataGridViewCellStyle1.Alignment = DataGridViewContentAlignment.MiddleLeft;
             dataGridViewCellStyle1.BackColor = SystemColors.Control;
             dataGridViewCellStyle1.Font = new Font("Segoe UI", 9F);
@@ -79,9 +80,9 @@ namespace DMARCReportAnalyzer
             dataGridViewCellStyle1.SelectionBackColor = SystemColors.Control;
             dataGridViewCellStyle1.SelectionForeColor = SystemColors.HighlightText;
             dataGridViewCellStyle1.WrapMode = DataGridViewTriState.True;
-            DataGridViewSenderOverview.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
-            DataGridViewSenderOverview.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            DataGridViewSenderOverview.Columns.AddRange(new DataGridViewColumn[] { dgvSenderOverview_SourceIp, dgvSenderOverview_MessageCount });
+            dgvSenderOverview.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
+            dgvSenderOverview.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dgvSenderOverview.Columns.AddRange(new DataGridViewColumn[] { dgvSenderOverview_SourceIp, dgvSenderOverview_MessageCount });
             dataGridViewCellStyle2.Alignment = DataGridViewContentAlignment.MiddleLeft;
             dataGridViewCellStyle2.BackColor = SystemColors.Window;
             dataGridViewCellStyle2.Font = new Font("Segoe UI", 9F);
@@ -89,10 +90,10 @@ namespace DMARCReportAnalyzer
             dataGridViewCellStyle2.SelectionBackColor = SystemColors.ActiveCaption;
             dataGridViewCellStyle2.SelectionForeColor = SystemColors.HighlightText;
             dataGridViewCellStyle2.WrapMode = DataGridViewTriState.False;
-            DataGridViewSenderOverview.DefaultCellStyle = dataGridViewCellStyle2;
-            DataGridViewSenderOverview.EnableHeadersVisualStyles = false;
-            DataGridViewSenderOverview.Location = new Point(12, 56);
-            DataGridViewSenderOverview.Name = "DataGridViewSenderOverview";
+            dgvSenderOverview.DefaultCellStyle = dataGridViewCellStyle2;
+            dgvSenderOverview.EnableHeadersVisualStyles = false;
+            dgvSenderOverview.Location = new Point(12, 56);
+            dgvSenderOverview.Name = "dgvSenderOverview";
             dataGridViewCellStyle3.Alignment = DataGridViewContentAlignment.MiddleLeft;
             dataGridViewCellStyle3.BackColor = SystemColors.Control;
             dataGridViewCellStyle3.Font = new Font("Segoe UI", 9F);
@@ -100,11 +101,11 @@ namespace DMARCReportAnalyzer
             dataGridViewCellStyle3.SelectionBackColor = SystemColors.Control;
             dataGridViewCellStyle3.SelectionForeColor = SystemColors.HighlightText;
             dataGridViewCellStyle3.WrapMode = DataGridViewTriState.True;
-            DataGridViewSenderOverview.RowHeadersDefaultCellStyle = dataGridViewCellStyle3;
-            DataGridViewSenderOverview.RowHeadersVisible = false;
-            DataGridViewSenderOverview.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            DataGridViewSenderOverview.Size = new Size(357, 195);
-            DataGridViewSenderOverview.TabIndex = 5;
+            dgvSenderOverview.RowHeadersDefaultCellStyle = dataGridViewCellStyle3;
+            dgvSenderOverview.RowHeadersVisible = false;
+            dgvSenderOverview.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            dgvSenderOverview.Size = new Size(357, 195);
+            dgvSenderOverview.TabIndex = 5;
             // 
             // dgvSenderOverview_SourceIp
             // 
@@ -121,7 +122,7 @@ namespace DMARCReportAnalyzer
             // 
             // MenuStripMain
             // 
-            MenuStripMain.Items.AddRange(new ToolStripItem[] { datenbankToolStripMenuItem, importToolStripMenuItem, reportsToolStripMenuItem, xMLToolStripMenuItem });
+            MenuStripMain.Items.AddRange(new ToolStripItem[] { datenbankToolStripMenuItem, importToolStripMenuItem, reportsToolStripMenuItem, xMLToolStripMenuItem, mnuItemLogs });
             MenuStripMain.Location = new Point(0, 0);
             MenuStripMain.Name = "MenuStripMain";
             MenuStripMain.Size = new Size(1307, 24);
@@ -339,6 +340,13 @@ namespace DMARCReportAnalyzer
             dgvReporterOverview_MessageCount.Name = "dgvReporterOverview_MessageCount";
             dgvReporterOverview_MessageCount.ReadOnly = true;
             // 
+            // mnuItemLogs
+            // 
+            mnuItemLogs.Name = "mnuItemLogs";
+            mnuItemLogs.Size = new Size(44, 20);
+            mnuItemLogs.Text = "Logs";
+            mnuItemLogs.Click += mnuItemLogs_Click;
+            // 
             // FormMain
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
@@ -355,13 +363,13 @@ namespace DMARCReportAnalyzer
             Controls.Add(DateTimePickerStart);
             Controls.Add(PlotMessagesOverTime);
             Controls.Add(StatusStripMain);
-            Controls.Add(DataGridViewSenderOverview);
+            Controls.Add(dgvSenderOverview);
             Controls.Add(MenuStripMain);
             MainMenuStrip = MenuStripMain;
             Name = "FormMain";
             Text = "DMARC Report Analyzer";
             FormClosing += FormMain_FormClosing;
-            ((System.ComponentModel.ISupportInitialize)DataGridViewSenderOverview).EndInit();
+            ((System.ComponentModel.ISupportInitialize)dgvSenderOverview).EndInit();
             MenuStripMain.ResumeLayout(false);
             MenuStripMain.PerformLayout();
             StatusStripMain.ResumeLayout(false);
@@ -372,7 +380,7 @@ namespace DMARCReportAnalyzer
         }
 
         #endregion
-        private DataGridView DataGridViewSenderOverview;
+        private DataGridView dgvSenderOverview;
         private MenuStrip MenuStripMain;
         private ToolStripMenuItem datenbankToolStripMenuItem;
         private ToolStripMenuItem OpenDatabaseToolStripMenuItem;
@@ -399,5 +407,6 @@ namespace DMARCReportAnalyzer
         private DataGridView dgvReporterOverview;
         private DataGridViewTextBoxColumn dgvReporterOverview_Reporter;
         private DataGridViewTextBoxColumn dgvReporterOverview_MessageCount;
+        private ToolStripMenuItem mnuItemLogs;
     }
 }
