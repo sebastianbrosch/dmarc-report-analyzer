@@ -31,6 +31,14 @@ public abstract class Storage : IStorage
     }
 
     /// <summary>
+    /// Checks whether a DMARC report exists in the database.
+    /// </summary>
+    /// <param name="report">All information from the DMARC report.</param>
+    /// <param name="detailed">Status whether a detailed check should be performed.</param>
+    /// <returns>Status whether the DMARC report already exists in the database.</returns>
+    public abstract bool Exists(Report report, bool detailed = false);
+
+    /// <summary>
     /// Saves a DMARC report in the database.
     /// </summary>
     /// <param name="report">All information from the DMARC report.</param>

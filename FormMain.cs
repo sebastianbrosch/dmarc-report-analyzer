@@ -569,13 +569,17 @@ public partial class FormMain : Form
                 continue;
             }
 
-            storage.Save(new Report
+            Report report = new Report { Document = document, Message = null, Feedback = feedback };
+
+            if (storage.Exists(report))
             {
-                Document = document,
-                Message = null,
-                Feedback = feedback
-            });
+                continue;
+            }
+
+            storage.Save(report);
         }
+
+        LoadDatabase();
     }
 
     private void exportToolStripMenuItem_Click(object sender, EventArgs e)

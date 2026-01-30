@@ -103,13 +103,6 @@ public class Storage(IDbConnection connection) : DMARC.Storage(connection)
             return false;
         }
 
-        int cntReports = Connection.ExecuteScalar<int>("SELECT COUNT(*) FROM metadata WHERE report_id = @ReportId", new { metadata.ReportId });
-
-        if (cntReports > 0)
-        {
-            return false;
-        }
-
         Database.CreateMetadata(new DMARCReportAnalyzer.Database.DTO.Metadata(
             feedbackId,
             metadata.ReportId ?? string.Empty,
@@ -231,6 +224,23 @@ public class Storage(IDbConnection connection) : DMARC.Storage(connection)
         }
 
         return true;
+    }
+
+    public override bool Exists(Report report, bool detailed = false)
+    {
+        Schema.Feedback feedback = (Schema.Feedback)report.Feedback;
+        Schema.ReportMetadataType metadata = feedback.ReportMetadata!;
+
+        if (detailed)
+        {
+            var listMetadata = Connection.Query("SELECT * FROM metadata WHERE report_id = @ReportId", new { metadata.ReportId });
+            return listMetadata.Any(item => item.report_begin == metadata.DateRange!.Begin && item.report_end == metadata.DateRange!.End);
+        }
+        else
+        {
+            int cntReports = Connection.ExecuteScalar<int>("SELECT COUNT(feedback_id) FROM metadata WHERE report_id = @ReportId", new { metadata.ReportId });
+            return (cntReports > 0);
+        }
     }
 
     /// <summary>

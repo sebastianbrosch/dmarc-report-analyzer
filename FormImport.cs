@@ -395,7 +395,24 @@ public partial class FormImport : Form
                         continue;
                     }
 
-                    if (storage.Save(new Report { Document = documentXml, Message = message, Feedback = feedback }))
+                    Report report = new Report { Document = documentXml, Message = message, Feedback = feedback };
+
+                    if (storage.Exists(report))
+                    {
+                        if (storage.Exists(report, true))
+                        {
+                            Log.Information("DMARC report already exists in database.");
+                            continue;
+                        }
+                        else
+                        {
+                            Log.Warning("DMARC report already exists in database, but with different information.");
+                            hasErrors = true;
+                            continue;
+                        }
+                    }
+
+                    if (storage.Save(report))
                     {
                         cntNewReports++;
                         Log.Information("DMARC report has been successfully saved to the database.");
@@ -404,6 +421,7 @@ public partial class FormImport : Form
                     {
                         Log.Error("DMARC report could not be saved to the database.");
                         hasErrors = true;
+                        continue;
                     }
                 }
             }
