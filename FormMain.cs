@@ -1,5 +1,6 @@
 using Dapper;
 using DMARCReportAnalyzer.DMARC;
+using MailKit.Net.Imap;
 using ScottPlot;
 using ScottPlot.WinForms;
 using System.Data;
@@ -24,10 +25,12 @@ public partial class FormMain : Form
     public FormMain()
     {
         InitializeComponent();
-        ToolStripStatusLabelReportCount.Visible = false;
-        ToolStripStatusLabelDatabaseName.Visible = false;
-        ToolStripStatusLabelDatabaseName.Text = string.Empty;
-        ToolStripStatusLabelReportCount.Text = string.Empty;
+        tsslblReportCount.Visible = false;
+        tsslblDatabaseName.Visible = false;
+        tsslblDomainCount.Visible = false;
+        tsslblDatabaseName.Text = string.Empty;
+        tsslblReportCount.Text = string.Empty;
+        tsslblDomainCount.Text = string.Empty;
     }
 
     struct MessageOverTime
@@ -146,16 +149,19 @@ public partial class FormMain : Form
             return;
         }
 
-        int reportCount = Connection.QuerySingleOrDefault<int>("SELECT COUNT(id) FROM feedback");
-        ToolStripStatusLabelReportCount.Text = reportCount + " Reports";
+        int reportCount = Connection.ExecuteScalar<int>("SELECT COUNT(id) FROM feedback");
+        tsslblReportCount.Text = reportCount + ((reportCount == 1) ? " Report" : " Reports");
+        int domainCount = Connection.ExecuteScalar<int>("SELECT COUNT(DISTINCT domain) FROM policy_published");
+        tsslblDomainCount.Text = domainCount + ((domainCount == 1) ? " Domain" : " Domains");
 
         StatusStripMain.ShowItemToolTips = true;
         string databaseFilePath = ((SQLiteConnection)Connection).FileName;
-        ToolStripStatusLabelDatabaseName.Text = Path.GetFileName(databaseFilePath);
-        ToolStripStatusLabelDatabaseName.ToolTipText = databaseFilePath;
+        tsslblDatabaseName.Text = Path.GetFileName(databaseFilePath);
+        tsslblDatabaseName.ToolTipText = databaseFilePath;
 
-        ToolStripStatusLabelReportCount.Visible = true;
-        ToolStripStatusLabelDatabaseName.Visible = true;
+        tsslblReportCount.Visible = true;
+        tsslblDatabaseName.Visible = true;
+        tsslblDomainCount.Visible = true;
 
         ReportsTimeSpan dateRange = Connection.QuerySingle<ReportsTimeSpan>("SELECT DATE(MIN(report_begin)) report_begin, DATE(MAX(report_end)) report_end FROM metadata");
 
