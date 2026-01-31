@@ -319,8 +319,14 @@ public partial class FormImport : Form
         List<string> cleanupFiles = [];
         int cntNewReports = 0;
 
+        pbImport.Maximum = messageUIds.Count;
+        pbImport.Step = 1;
+        pbImport.Value = 0;
+        pbImport.Visible = true;
+
         foreach (MailKit.UniqueId messageUId in messageUIds)
         {
+            pbImport.PerformStep();
             bool hasErrors = false;
 
             MimeMessage message = sourceFolder.GetMessage(messageUId);
@@ -464,6 +470,7 @@ public partial class FormImport : Form
 
         Log.Information("End of Import: {date}", DateTime.Now);
         MessageBox.Show(this, "Import completed. " + cntNewReports + " new DMARC reports.", this.Text, MessageBoxButtons.OK, MessageBoxIcon.Information);
+        pbImport.Visible = false;
         return true;
     }
 

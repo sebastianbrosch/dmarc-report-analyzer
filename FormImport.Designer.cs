@@ -50,6 +50,7 @@ namespace DMARCReportAnalyzer
             lblArchiveFolder = new Label();
             chkDeleteMessage = new CheckBox();
             btnSave = new Button();
+            pbImport = new ProgressBar();
             grpMailServerIMAP.SuspendLayout();
             grpActionAfterImport.SuspendLayout();
             SuspendLayout();
@@ -216,7 +217,7 @@ namespace DMARCReportAnalyzer
             // 
             // btnImport
             // 
-            btnImport.Location = new Point(418, 272);
+            btnImport.Location = new Point(12, 272);
             btnImport.Name = "btnImport";
             btnImport.Size = new Size(75, 23);
             btnImport.TabIndex = 1;
@@ -259,7 +260,7 @@ namespace DMARCReportAnalyzer
             // 
             // btnSave
             // 
-            btnSave.Location = new Point(12, 272);
+            btnSave.Location = new Point(415, 272);
             btnSave.Name = "btnSave";
             btnSave.Size = new Size(75, 23);
             btnSave.TabIndex = 16;
@@ -267,11 +268,20 @@ namespace DMARCReportAnalyzer
             btnSave.UseVisualStyleBackColor = true;
             btnSave.Click += btnSave_Click;
             // 
+            // pbImport
+            // 
+            pbImport.Location = new Point(93, 272);
+            pbImport.Name = "pbImport";
+            pbImport.Size = new Size(316, 21);
+            pbImport.TabIndex = 17;
+            pbImport.Visible = false;
+            // 
             // FormImport
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(505, 305);
+            Controls.Add(pbImport);
             Controls.Add(btnSave);
             Controls.Add(grpActionAfterImport);
             Controls.Add(btnImport);
@@ -310,5 +320,6 @@ namespace DMARCReportAnalyzer
         private Label lblName;
         private Button btnSave;
         private ComboBox cmbName;
+        private ProgressBar pbImport;
     }
 }
