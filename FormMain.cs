@@ -252,7 +252,7 @@ public partial class FormMain : Form
         if (value is not null && value.HasValue)
         {
             return value.Value.Date.ToString("yyyy-MM-dd");
-        } 
+        }
         else
         {
             return string.Empty;
@@ -638,6 +638,21 @@ public partial class FormMain : Form
         if (System.IO.Directory.Exists(logsFolder))
         {
             Process.Start("explorer.exe", logsFolder);
+        }
+    }
+
+    private void tsslblDatabaseName_Click(object sender, EventArgs e)
+    {
+        if (tsslblDatabaseName.ToolTipText is null)
+        {
+            return;
+        }
+
+        string filePath = tsslblDatabaseName.ToolTipText;
+
+        if (File.Exists(filePath))
+        {
+            Process.Start("explorer.exe", "/select,\"" + filePath + "\"");
         }
     }
 }
