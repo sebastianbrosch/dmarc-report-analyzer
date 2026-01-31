@@ -31,7 +31,7 @@ public partial class FormReports : Form
 
     private void LoadReportDetails(string id)
     {
-        var policyPublished = DbConnection.QueryFirst("SELECT * FROM policy_published WHERE feedback_id = @id", new { id });
+        var policyPublished = DbConnection.QueryFirst("SELECT discovery_method, aspf, adkim, p, sp, np, pct FROM policy_published WHERE feedback_id = @id", new { id });
         txtDiscoveryMethod.Text = policyPublished.discovery_method;
         txtSPFAlignment.Text = policyPublished.aspf;
         txtDKIMAlignment.Text = policyPublished.adkim;
@@ -40,7 +40,7 @@ public partial class FormReports : Form
         txtNonExistentSubDomainsPolicy.Text = policyPublished.np;
         txtPercentage.Text = Convert.ToString(policyPublished.pct);
 
-        var metadata = DbConnection.QueryFirst("SELECT * FROM metadata WHERE feedback_id = @id", new { id });
+        var metadata = DbConnection.QueryFirst("SELECT report_begin, report_end, report_id, organization, email, extra_contact_info FROM metadata WHERE feedback_id = @id", new { id });
         txtReportBegin.Text = Convert.ToString(metadata.report_begin);
         txtReportEnd.Text = Convert.ToString(metadata.report_end);
         txtReportID.Text = metadata.report_id;

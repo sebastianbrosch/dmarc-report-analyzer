@@ -233,7 +233,7 @@ public class Storage(IDbConnection connection) : DMARC.Storage(connection)
 
         if (detailed)
         {
-            var listMetadata = Connection.Query("SELECT * FROM metadata WHERE report_id = @ReportId", new { metadata.ReportId });
+            var listMetadata = Connection.Query("SELECT report_begin, report_end FROM metadata WHERE report_id = @ReportId", new { metadata.ReportId });
             return listMetadata.Any(item => item.report_begin == metadata.DateRange!.Begin && item.report_end == metadata.DateRange!.End);
         }
         else
