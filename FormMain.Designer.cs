@@ -34,6 +34,7 @@ namespace DMARCReportAnalyzer
             DataGridViewCellStyle dataGridViewCellStyle4 = new DataGridViewCellStyle();
             DataGridViewCellStyle dataGridViewCellStyle5 = new DataGridViewCellStyle();
             DataGridViewCellStyle dataGridViewCellStyle6 = new DataGridViewCellStyle();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormMain));
             dgvSenderOverview = new DataGridView();
             dgvSenderOverview_SourceIp = new DataGridViewTextBoxColumn();
             dgvSenderOverview_MessageCount = new DataGridViewTextBoxColumn();
@@ -51,7 +52,7 @@ namespace DMARCReportAnalyzer
             tsslblDatabaseName = new ToolStripStatusLabel();
             tsslblReportCount = new ToolStripStatusLabel();
             tsslblDomainCount = new ToolStripStatusLabel();
-            PlotMessagesOverTime = new ScottPlot.WinForms.FormsPlot();
+            plotMessagesOverTime = new ScottPlot.WinForms.FormsPlot();
             DateTimePickerStart = new DateTimePicker();
             DateTimePickerEnd = new DateTimePicker();
             LabelStart = new Label();
@@ -222,14 +223,14 @@ namespace DMARCReportAnalyzer
             tsslblDomainCount.Size = new Size(85, 19);
             tsslblDomainCount.Text = "Domain Count";
             // 
-            // PlotMessagesOverTime
+            // plotMessagesOverTime
             // 
-            PlotMessagesOverTime.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            PlotMessagesOverTime.DisplayScale = 1F;
-            PlotMessagesOverTime.Location = new Point(375, 56);
-            PlotMessagesOverTime.Name = "PlotMessagesOverTime";
-            PlotMessagesOverTime.Size = new Size(920, 382);
-            PlotMessagesOverTime.TabIndex = 10;
+            plotMessagesOverTime.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            plotMessagesOverTime.DisplayScale = 1F;
+            plotMessagesOverTime.Location = new Point(375, 56);
+            plotMessagesOverTime.Name = "plotMessagesOverTime";
+            plotMessagesOverTime.Size = new Size(920, 382);
+            plotMessagesOverTime.TabIndex = 10;
             // 
             // DateTimePickerStart
             // 
@@ -370,10 +371,11 @@ namespace DMARCReportAnalyzer
             Controls.Add(LabelStart);
             Controls.Add(DateTimePickerEnd);
             Controls.Add(DateTimePickerStart);
-            Controls.Add(PlotMessagesOverTime);
+            Controls.Add(plotMessagesOverTime);
             Controls.Add(StatusStripMain);
             Controls.Add(dgvSenderOverview);
             Controls.Add(MenuStripMain);
+            Icon = (Icon)resources.GetObject("$this.Icon");
             MainMenuStrip = MenuStripMain;
             Name = "FormMain";
             Text = "DMARC Report Analyzer";
@@ -400,7 +402,7 @@ namespace DMARCReportAnalyzer
         private StatusStrip StatusStripMain;
         private ToolStripStatusLabel tsslblReportCount;
         private ToolStripStatusLabel tsslblDatabaseName;
-        private ScottPlot.WinForms.FormsPlot PlotMessagesOverTime;
+        private ScottPlot.WinForms.FormsPlot plotMessagesOverTime;
         private DateTimePicker DateTimePickerStart;
         private DateTimePicker DateTimePickerEnd;
         private Label LabelStart;

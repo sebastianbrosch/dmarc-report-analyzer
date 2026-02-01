@@ -274,27 +274,18 @@ public partial class FormMain : Form
 
         if (string.IsNullOrWhiteSpace(beginSQL) || string.IsNullOrWhiteSpace(endSQL))
         {
-            sqlMessagesOverTime = @"
-              SELECT report_date, SUM(r.count) message_count
-              FROM metadata m 
-                INNER JOIN metadata_expansion me ON me.feedback_id = m.feedback_id 
-                INNER JOIN record r ON m.feedback_id = r.feedback_id
-              GROUP BY report_date
-              ORDER BY report_date ASC";
-            messages = Connection.Query<MessageOverTime>(sqlMessagesOverTime);
+            return;
         }
-        else
-        {
-            sqlMessagesOverTime = @"
-              SELECT report_date, SUM(r.count) message_count
-              FROM metadata m 
-                INNER JOIN metadata_expansion me ON me.feedback_id = m.feedback_id 
-                INNER JOIN record r ON m.feedback_id = r.feedback_id
-              WHERE report_date BETWEEN @begin AND @end
-              GROUP BY report_date
-              ORDER BY report_date ASC";
-            messages = Connection.Query<MessageOverTime>(sqlMessagesOverTime, new { begin = beginSQL, end = endSQL });
-        }
+
+        sqlMessagesOverTime = @"
+            SELECT report_date, SUM(r.count) message_count
+            FROM metadata m 
+            INNER JOIN metadata_expansion me ON me.feedback_id = m.feedback_id 
+            INNER JOIN record r ON m.feedback_id = r.feedback_id
+            WHERE report_date BETWEEN @begin AND @end
+            GROUP BY report_date
+            ORDER BY report_date ASC";
+        messages = Connection.Query<MessageOverTime>(sqlMessagesOverTime, new { begin = beginSQL, end = endSQL });
 
         DateTime[] dataX = messages!.ToList<MessageOverTime>().Select(x => x.report_date).ToArray<DateTime>();
         int[] dataY = messages!.ToList<MessageOverTime>().Select(x => x.message_count).ToArray<int>();
@@ -302,62 +293,45 @@ public partial class FormMain : Form
         double[] xs = dataX.Select(d => d.ToOADate()).ToArray();
         double[] ys = dataY.Select(v => (double)v).ToArray();
 
-        PlotMessagesOverTime.Plot.Clear();
-        PlotMessagesOverTime.Plot.Add.Bars(xs, ys);
-        PlotMessagesOverTime.Plot.Axes.Margins(bottom: 0);
+        plotMessagesOverTime.Plot.Clear();
+        plotMessagesOverTime.Plot.Add.Bars(xs, ys);
+        plotMessagesOverTime.Plot.Axes.Margins(bottom: 0);
 
-        var dtAx = PlotMessagesOverTime.Plot.Axes.DateTimeTicksBottom();
+        var dtAx = plotMessagesOverTime.Plot.Axes.DateTimeTicksBottom();
 
         dtAx.TickGenerator = new ScottPlot.TickGenerators.DateTimeFixedInterval(
             new ScottPlot.TickGenerators.TimeUnits.Day(), 1,
             new ScottPlot.TickGenerators.TimeUnits.Day(), 1,
-            dt => new DateTime(dt.Year, dt.Month, dt.Day));
+            dt => new DateTime(dt.Year, dt.Month, dt.Day)
+        );
 
-        PlotMessagesOverTime.Plot.Axes.Bottom.TickLabelStyle.Rotation = 90;
-        PlotMessagesOverTime.Plot.Axes.Bottom.TickLabelStyle.Alignment = Alignment.MiddleLeft;
-        PlotMessagesOverTime.Plot.Axes.Bottom.MinimumSize = 70;
+        plotMessagesOverTime.Plot.Axes.SetLimitsX(begin!.Value.AddHours(-12).ToOADate(), end!.Value.AddHours(12).ToOADate());
 
-        PlotMessagesOverTime.Refresh();
+        plotMessagesOverTime.Plot.Axes.Bottom.TickLabelStyle.Rotation = 90;
+        plotMessagesOverTime.Plot.Axes.Bottom.TickLabelStyle.Alignment = Alignment.MiddleLeft;
+        plotMessagesOverTime.Plot.Axes.Bottom.MinimumSize = 70;
 
-        IEnumerable<DKIMSPF> datas = Enumerable.Empty<DKIMSPF>();
+        plotMessagesOverTime.Refresh();
 
-        if (string.IsNullOrWhiteSpace(beginSQL) || string.IsNullOrWhiteSpace(endSQL))
-        {
-            string sqlDKIMSPF = @"
-              SELECT me.report_date,
-                SUM(CASE WHEN pe.dkim = 'pass' THEN r.count ELSE 0 END) dkim_pass_count, 
-                SUM(CASE WHEN pe.dkim = 'fail' THEN r.count ELSE 0 END) dkim_fail_count,
-                SUM(CASE WHEN pe.spf = 'pass' THEN r.count ELSE 0 END) spf_pass_count,
-                SUM(CASE WHEN pe.spf = 'fail' THEN r.count ELSE 0 END) spf_fail_count
-              FROM policy_evaluated pe 
-                INNER JOIN record r ON pe.record_id = r.id 
-                INNER JOIN metadata_expansion me ON r.feedback_id = me.feedback_id 
-              GROUP BY me.report_date
-              ORDER BY me.report_date ASC";
-            datas = Connection.Query<DKIMSPF>(sqlDKIMSPF);
-        }
-        else
-        {
-            string sqlDKIMSPF = @"
-              SELECT me.report_date,
-                SUM(CASE WHEN pe.dkim = 'pass' THEN r.count ELSE 0 END) dkim_pass_count, 
-                SUM(CASE WHEN pe.dkim = 'fail' THEN r.count ELSE 0 END) dkim_fail_count,
-                SUM(CASE WHEN pe.spf = 'pass' THEN r.count ELSE 0 END) spf_pass_count,
-                SUM(CASE WHEN pe.spf = 'fail' THEN r.count ELSE 0 END) spf_fail_count
-              FROM policy_evaluated pe 
-                INNER JOIN record r ON pe.record_id = r.id 
-                INNER JOIN metadata_expansion me ON r.feedback_id = me.feedback_id 
-              WHERE report_date BETWEEN @begin AND @end
-              GROUP BY me.report_date
-              ORDER BY me.report_date ASC";
-            datas = Connection.Query<DKIMSPF>(sqlDKIMSPF, new { begin = beginSQL, end = endSQL });
-        }
+        string sqlDKIMSPF = @"
+            SELECT me.report_date,
+            SUM(CASE WHEN pe.dkim = 'pass' THEN r.count ELSE 0 END) dkim_pass_count, 
+            SUM(CASE WHEN pe.dkim = 'fail' THEN r.count ELSE 0 END) dkim_fail_count,
+            SUM(CASE WHEN pe.spf = 'pass' THEN r.count ELSE 0 END) spf_pass_count,
+            SUM(CASE WHEN pe.spf = 'fail' THEN r.count ELSE 0 END) spf_fail_count
+            FROM policy_evaluated pe 
+            INNER JOIN record r ON pe.record_id = r.id 
+            INNER JOIN metadata_expansion me ON r.feedback_id = me.feedback_id 
+            WHERE report_date BETWEEN @begin AND @end
+            GROUP BY me.report_date
+            ORDER BY me.report_date ASC";
+        IEnumerable<DKIMSPF> datas = Connection.Query<DKIMSPF>(sqlDKIMSPF, new { begin = beginSQL, end = endSQL });
 
-        LoadPlotDKIM(datas, PlotDKIM);
-        LoadPlotSPF(datas, PlotSPF);
+        LoadPlotDKIM(datas, PlotDKIM, begin, end);
+        LoadPlotSPF(datas, PlotSPF, begin, end);
     }
 
-    private void LoadPlotDKIM(IEnumerable<DKIMSPF> datas, FormsPlot plot)
+    private void LoadPlotDKIM(IEnumerable<DKIMSPF> datas, FormsPlot plot, DateTime? begin, DateTime? end)
     {
         ScottPlot.Palettes.Category10 palette = new();
         List<Bar> bars = new();
@@ -400,6 +374,8 @@ public partial class FormMain : Form
         plot.Plot.Axes.Bottom.TickLabelStyle.Alignment = Alignment.MiddleLeft;
         plot.Plot.Axes.Bottom.MinimumSize = 70;
 
+        plot.Plot.Axes.SetLimitsX(begin!.Value.AddHours(-12).ToOADate(), end!.Value.AddHours(12).ToOADate());
+
         plot.Plot.Legend.IsVisible = true;
         plot.Plot.Legend.Alignment = Alignment.UpperLeft;
         plot.Plot.Legend.ManualItems.Clear();
@@ -409,7 +385,7 @@ public partial class FormMain : Form
         plot.Refresh();
     }
 
-    private void LoadPlotSPF(IEnumerable<DKIMSPF> datas, FormsPlot plot)
+    private void LoadPlotSPF(IEnumerable<DKIMSPF> datas, FormsPlot plot, DateTime? begin, DateTime? end)
     {
         ScottPlot.Palettes.Category10 palette = new();
         List<Bar> bars = new();
@@ -451,6 +427,8 @@ public partial class FormMain : Form
         plot.Plot.Axes.Bottom.TickLabelStyle.Rotation = 90;
         plot.Plot.Axes.Bottom.TickLabelStyle.Alignment = Alignment.MiddleLeft;
         plot.Plot.Axes.Bottom.MinimumSize = 70;
+
+        plot.Plot.Axes.SetLimitsX(begin!.Value.AddHours(-12).ToOADate(), end!.Value.AddHours(12).ToOADate());
 
         plot.Plot.Legend.IsVisible = true;
         plot.Plot.Legend.Alignment = Alignment.UpperLeft;
