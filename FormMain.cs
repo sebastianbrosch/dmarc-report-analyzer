@@ -1,6 +1,5 @@
 using Dapper;
 using DMARCReportAnalyzer.DMARC;
-using MailKit.Net.Imap;
 using ScottPlot;
 using ScottPlot.WinForms;
 using System.Data;
@@ -61,12 +60,12 @@ public partial class FormMain : Form
             return false;
         }
 
-        System.Data.SQLite.SQLiteConnectionStringBuilder builder = new();
+        SQLiteConnectionStringBuilder builder = new();
         builder.DataSource = path;
         builder.Version = 3;
         builder.FailIfMissing = !create;
 
-        Connection = new System.Data.SQLite.SQLiteConnection(builder.ConnectionString);
+        Connection = new SQLiteConnection(builder.ConnectionString);
         Connection.Open();
 
         return true;
@@ -77,7 +76,7 @@ public partial class FormMain : Form
         using (OpenFileDialog dlgOpenDatabase = new OpenFileDialog())
         {
             dlgOpenDatabase.DefaultExt = "*.sqlite";
-            dlgOpenDatabase.Filter = "SQLite Datenbank|*.sqlite";
+            dlgOpenDatabase.Filter = "SQLite Datenbank|*.sqlite;*.sqlite3;*.db;*.db3;*.s3db;*.sl3";
             dlgOpenDatabase.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
             dlgOpenDatabase.Multiselect = false;
             dlgOpenDatabase.ReadOnlyChecked = false;
@@ -114,7 +113,7 @@ public partial class FormMain : Form
             dlgNewDatabase.CheckWriteAccess = true;
             dlgNewDatabase.DefaultExt = "*.sqlite";
             dlgNewDatabase.DereferenceLinks = true;
-            dlgNewDatabase.Filter = "SQLite Datenbank|*.sqlite";
+            dlgNewDatabase.Filter = "SQLite Datenbank|*.sqlite;*.sqlite3;*.db;*.db3;*.s3db;*.sl3";
             dlgNewDatabase.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
             dlgNewDatabase.OverwritePrompt = true;
             dlgNewDatabase.RestoreDirectory = true;
