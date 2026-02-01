@@ -66,7 +66,7 @@ public partial class FormMain : Form
         builder.Version = 3;
         builder.FailIfMissing = !create;
 
-        Connection = new SQLiteConnection(builder.ConnectionString);
+        Connection = new System.Data.SQLite.SQLiteConnection(builder.ConnectionString);
         Connection.Open();
 
         return true;
@@ -92,6 +92,14 @@ public partial class FormMain : Form
 
             if (dlgOpenDatabase.ShowDialog() == DialogResult.OK && File.Exists(dlgOpenDatabase.FileName))
             {
+                //using FormPassword frmPassword = new FormPassword("Password for existing database");
+
+                //if (frmPassword.ShowDialog(this) != DialogResult.OK)
+                //{
+                //    MessageBox.Show(this, "The password prompt was canceled by the user.", this.Text, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                //    return;
+                //}
+
                 SetConnection(dlgOpenDatabase.FileName, false);
             }
         }
@@ -120,13 +128,21 @@ public partial class FormMain : Form
             {
                 if (File.Exists(dlgNewDatabase.FileName))
                 {
-                    MessageBox.Show("Die Datenbank " + Path.GetFileName(dlgNewDatabase.FileName) + " existiert bereits!", "Datenbank", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    MessageBox.Show("The database " + Path.GetFileName(dlgNewDatabase.FileName) + " already exists.", this.Text, MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
 
+                //using FormPassword frmPassword = new FormPassword("Password for new database");
+
+                //if (frmPassword.ShowDialog(this) != DialogResult.OK)
+                //{
+                //    MessageBox.Show(this, "The password prompt was canceled by the user.", this.Text, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                //    return;
+                //}
+
                 if (SetConnection(dlgNewDatabase.FileName, true))
                 {
-                    if (Connection is not null)
+                    if (this.Connection is not null)
                     {
                         DMARCReportAnalyzer.Database.Database database = new DMARCReportAnalyzer.Database.Database(Connection);
                         database.InitializeDatabase();
