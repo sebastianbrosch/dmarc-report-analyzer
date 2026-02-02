@@ -94,6 +94,7 @@ namespace DMARCReportAnalyzer
             Controls.Add(BtnOK);
             Controls.Add(lblPassword);
             Controls.Add(txtPassword);
+            FormBorderStyle = FormBorderStyle.FixedSingle;
             Icon = (Icon)resources.GetObject("$this.Icon");
             Name = "FormPassword";
             StartPosition = FormStartPosition.CenterParent;

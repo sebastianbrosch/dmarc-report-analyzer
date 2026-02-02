@@ -28,6 +28,7 @@ namespace DMARCReportAnalyzer
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormImport));
             grpMailServerIMAP = new GroupBox();
             cmbName = new ComboBox();
             lblName = new Label();
@@ -286,6 +287,8 @@ namespace DMARCReportAnalyzer
             Controls.Add(grpActionAfterImport);
             Controls.Add(btnImport);
             Controls.Add(grpMailServerIMAP);
+            FormBorderStyle = FormBorderStyle.FixedSingle;
+            Icon = (Icon)resources.GetObject("$this.Icon");
             Name = "FormImport";
             Text = "Import from Mail Account";
             Load += FormImport_Load;

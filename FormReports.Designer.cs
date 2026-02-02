@@ -31,6 +31,7 @@ namespace DMARCReportAnalyzer
             DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
             DataGridViewCellStyle dataGridViewCellStyle3 = new DataGridViewCellStyle();
             DataGridViewCellStyle dataGridViewCellStyle2 = new DataGridViewCellStyle();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormReports));
             dgvReportsOverview = new DataGridView();
             dgvReportsOverview_ID = new DataGridViewTextBoxColumn();
             dgvReportsOverview_ReportBegin = new DataGridViewTextBoxColumn();
@@ -393,6 +394,8 @@ namespace DMARCReportAnalyzer
             Controls.Add(grpPublishedPolicy);
             Controls.Add(grpReportDetails);
             Controls.Add(dgvReportsOverview);
+            FormBorderStyle = FormBorderStyle.FixedSingle;
+            Icon = (Icon)resources.GetObject("$this.Icon");
             Name = "FormReports";
             Text = "DMARC Reports";
             ((System.ComponentModel.ISupportInitialize)dgvReportsOverview).EndInit();
