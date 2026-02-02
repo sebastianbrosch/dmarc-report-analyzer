@@ -1,5 +1,6 @@
 using Dapper;
 using System.Data;
+using System.Xml;
 
 namespace DMARCReportAnalyzer;
 
@@ -58,5 +59,61 @@ public partial class FormReports : Form
 
         DataGridViewRow dgvrSelected = dgvReportsOverview.SelectedRows[0];
         LoadReportDetails(dgvrSelected!.Cells[dgvReportsOverview_ID!.Name!]!.Value!.ToString()!);
+    }
+
+    private void exportXMLToolStripMenuItem_Click(object sender, EventArgs e)
+    {
+        DataGridViewSelectedRowCollection listSelectedRows = dgvReportsOverview.SelectedRows;
+
+        if (listSelectedRows.Count == 1)
+        {
+            string? reportId = listSelectedRows[0].Cells[dgvReportsOverview_ID.Index]!.Value!.ToString();
+            var data = DbConnection.QueryFirstOrDefault("SELECT f.id, m.report_begin, m.report_end, f.data, pp.domain FROM metadata m INNER JOIN feedback f ON m.feedback_id = f.id INNER JOIN policy_published pp ON pp.feedback_id = f.id");
+
+            if (data is null)
+            {
+                return;
+            }
+
+            DateTimeOffset offsetBegin = new DateTimeOffset(data.report_begin, TimeSpan.Zero);
+            DateTimeOffset offsetEnd = new DateTimeOffset(data.report_end, TimeSpan.Zero);
+            
+            string filename = data.domain + "!" + offsetBegin.ToUnixTimeSeconds() + "!" + offsetEnd.ToUnixTimeSeconds() + "!" + data.id + ".xml";
+            
+            string filePath = string.Empty;
+
+            using (SaveFileDialog dlgSelectFile = new())
+            {
+                dlgSelectFile.DefaultExt = ".xml";
+                dlgSelectFile.Filter = "XML-Dokument|*.xml";
+                dlgSelectFile.FileName = filename;
+                dlgSelectFile.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+
+                if (dlgSelectFile.ShowDialog(this) == DialogResult.OK)
+                {
+                    filePath = dlgSelectFile.FileName;
+                }
+            }
+
+            if (string.IsNullOrWhiteSpace(filePath) || File.Exists(filePath))
+            {
+                MessageBox.Show(this, "No storage location was specified, or the file already exists.", this.Text, MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            XmlDocument document = new XmlDocument();
+            document.LoadXml(data.data);
+            XmlWriterSettings writerSettings = new XmlWriterSettings();
+            writerSettings.Indent = true;
+            writerSettings.ConformanceLevel = ConformanceLevel.Document;
+
+            using (XmlWriter writer = XmlWriter.Create(filePath, writerSettings))
+            {
+                document.Save(writer);
+                writer.Close();
+            }
+
+            MessageBox.Show(this, "The XML document was created successfully.", this.Text, MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
     }
 }

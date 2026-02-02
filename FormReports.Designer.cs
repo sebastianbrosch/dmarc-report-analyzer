@@ -28,6 +28,7 @@ namespace DMARCReportAnalyzer
         /// </summary>
         private void InitializeComponent()
         {
+            components = new System.ComponentModel.Container();
             DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
             DataGridViewCellStyle dataGridViewCellStyle3 = new DataGridViewCellStyle();
             DataGridViewCellStyle dataGridViewCellStyle2 = new DataGridViewCellStyle();
@@ -65,9 +66,12 @@ namespace DMARCReportAnalyzer
             lblSPFAlignment = new Label();
             lblDKIMAlignment = new Label();
             txtDKIMAlignment = new TextBox();
+            ctxReports = new ContextMenuStrip(components);
+            exportXMLToolStripMenuItem = new ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)dgvReportsOverview).BeginInit();
             grpReportDetails.SuspendLayout();
             grpPublishedPolicy.SuspendLayout();
+            ctxReports.SuspendLayout();
             SuspendLayout();
             // 
             // dgvReportsOverview
@@ -85,6 +89,7 @@ namespace DMARCReportAnalyzer
             dgvReportsOverview.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
             dgvReportsOverview.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             dgvReportsOverview.Columns.AddRange(new DataGridViewColumn[] { dgvReportsOverview_ID, dgvReportsOverview_ReportBegin, dgvReportsOverview_ReportEnd, dgvReportsOverview_Organization, dgvReportsOverview_MessageCount });
+            dgvReportsOverview.ContextMenuStrip = ctxReports;
             dataGridViewCellStyle3.Alignment = DataGridViewContentAlignment.MiddleLeft;
             dataGridViewCellStyle3.BackColor = SystemColors.Window;
             dataGridViewCellStyle3.Font = new Font("Segoe UI", 9F);
@@ -386,6 +391,19 @@ namespace DMARCReportAnalyzer
             txtDKIMAlignment.Size = new Size(173, 23);
             txtDKIMAlignment.TabIndex = 0;
             // 
+            // ctxReports
+            // 
+            ctxReports.Items.AddRange(new ToolStripItem[] { exportXMLToolStripMenuItem });
+            ctxReports.Name = "ctxReports";
+            ctxReports.Size = new Size(135, 26);
+            // 
+            // exportXMLToolStripMenuItem
+            // 
+            exportXMLToolStripMenuItem.Name = "exportXMLToolStripMenuItem";
+            exportXMLToolStripMenuItem.Size = new Size(134, 22);
+            exportXMLToolStripMenuItem.Text = "Export XML";
+            exportXMLToolStripMenuItem.Click += exportXMLToolStripMenuItem_Click;
+            // 
             // FormReports
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
@@ -403,6 +421,7 @@ namespace DMARCReportAnalyzer
             grpReportDetails.PerformLayout();
             grpPublishedPolicy.ResumeLayout(false);
             grpPublishedPolicy.PerformLayout();
+            ctxReports.ResumeLayout(false);
             ResumeLayout(false);
         }
 
@@ -441,5 +460,7 @@ namespace DMARCReportAnalyzer
         private TextBox txtNonExistentSubDomainsPolicy;
         private Label lblDiscoveryMethod;
         private TextBox txtDiscoveryMethod;
+        private ContextMenuStrip ctxReports;
+        private ToolStripMenuItem exportXMLToolStripMenuItem;
     }
 }
