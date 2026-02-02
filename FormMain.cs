@@ -372,7 +372,7 @@ public partial class FormMain : Form
             fail_percentage = 100 - pass_percentage;
         }
 
-        lblDKIM_Information.Text = "Pass: " + string.Format("{0:0.##}", pass_percentage) + "% - Fail: " + string.Format("{0:0.##}", fail_percentage) + "%";
+        lblDKIM_Information.Text = string.Format("Pass: {0:0.##}% ({1}) - Fail: {2:0.##}% ({3})", pass_percentage, sum_pass, fail_percentage, sum_fail);
 
         plot.Plot.Clear();
         plot.Plot.Add.Bars(bars);
@@ -426,7 +426,7 @@ public partial class FormMain : Form
             fail_percentage = 100 - pass_percentage;
         }
 
-        lblSPF_Information.Text = "Pass: " + string.Format("{0:0.##}", pass_percentage) + "% - Fail: " + string.Format("{0:0.##}", fail_percentage) + "%";
+        lblSPF_Information.Text = string.Format("Pass: {0:0.##} ({1}) - Fail: {2:0.##} ({3})", pass_percentage, sum_pass, fail_percentage, sum_fail);
 
         plot.Plot.Clear();
         plot.Plot.Add.Bars(bars);
