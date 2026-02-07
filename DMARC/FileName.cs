@@ -12,11 +12,6 @@ namespace DMARCReportAnalyzer.DMARC;
 public class FileName
 {
     /// <summary>
-    /// Name of the file.
-    /// </summary>
-    public readonly string Name;
-
-    /// <summary>
     /// Domain of the receiving provider.
     /// </summary>
     public readonly string Receiver;
@@ -44,15 +39,13 @@ public class FileName
     /// <summary>
     /// Creates a new instance of this class.
     /// </summary>
-    /// <param name="name">Name of the file.</param>
     /// <param name="receiver">Domain of the receiving provider.</param>
     /// <param name="domain">Domain of the policy/sender.</param>
     /// <param name="begin">Begin of the DMARC report.</param>
     /// <param name="end">End of the DMARC report.</param>
     /// <param name="uniqueId">Unique ID of the DMARC report.</param>
-    private FileName(string name, string receiver, string domain, DateTime begin, DateTime end, string? uniqueId)
+    private FileName(string receiver, string domain, DateTime begin, DateTime end, string? uniqueId)
     {
-        this.Name = name;
         this.Receiver = receiver;
         this.Domain = domain;
         this.Begin = begin;
@@ -67,32 +60,55 @@ public class FileName
     /// <returns>A new instance of this class or null if the instance could not be created.</returns>
     public static FileName? Create(string path)
     {
-        string fileName = Path.GetFileName(path);
-        Regex rgxFileName = new(@"(?<provider>[^!]+)!(?<domain>[^!]+)!(?<begin>[^!\.]+)!(?<end>[^!\.]+)(?:!(?<uniqueId>[^!\.]+))?", RegexOptions.CultureInvariant);
-        Match matchFileName = rgxFileName.Match(fileName);
+        Regex rgxFileName = new(@"(?<provider>[^!]+)!(?<domain>[^!]+)!(?<begin>\d+)!(?<end>\d+)(?:!(?<uniqueId>[^!\.]+))?", RegexOptions.CultureInvariant);
+        Match matchFileName = rgxFileName.Match(Path.GetFileName(path));
 
         if (!matchFileName.Success)
         {
             return null;
         }
 
-        if (Uri.CheckHostName(matchFileName.Groups["provider"].Value) != UriHostNameType.Dns)
-        {
-            return null;
-        }
-
-        if (Uri.CheckHostName(matchFileName.Groups["domain"].Value) != UriHostNameType.Dns)
-        {
-            return null;
-        }
-
-        return new FileName(
-            fileName,
+        return Create(
             matchFileName.Groups["provider"].Value,
             matchFileName.Groups["domain"].Value,
             DateTimeOffset.FromUnixTimeSeconds(Convert.ToInt64(matchFileName.Groups["begin"].Value)).UtcDateTime,
             DateTimeOffset.FromUnixTimeSeconds(Convert.ToInt64(matchFileName.Groups["end"].Value)).UtcDateTime,
             matchFileName.Groups["uniqueId"].Success ? matchFileName.Groups["uniqueId"].Value : null
+        );
+    }
+
+    /// <summary>
+    /// Creates a new instance of this class using the needed information.
+    /// </summary>
+    /// <param name="provider">Domain of the receiving provider./param>
+    /// <param name="domain">Domain of the policy/sender.</param>
+    /// <param name="begin">Begin of the DMARC report.</param>
+    /// <param name="end">End of the DMARC report.</param>
+    /// <param name="uniqueId">Unique ID of the DMARC report.</param>
+    /// <returns>A new instance of this class or null if the instance could not be created.</returns>
+    public static FileName? Create(string provider, string domain, DateTime begin, DateTime end, string? uniqueId)
+    {
+        if (string.IsNullOrWhiteSpace(provider) || Uri.CheckHostName(provider) != UriHostNameType.Dns)
+        {
+            return null;
+        }
+
+        if (string.IsNullOrWhiteSpace(domain) || Uri.CheckHostName(domain) != UriHostNameType.Dns)
+        {
+            return null;
+        }
+
+        if (end < begin)
+        {
+            return null;
+        }
+
+        return new FileName(
+            provider.Trim(),
+            domain.Trim(),
+            begin,
+            end,
+            string.IsNullOrWhiteSpace(uniqueId) ? null : uniqueId.Trim()
         );
     }
 
