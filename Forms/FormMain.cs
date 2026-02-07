@@ -144,7 +144,12 @@ public partial class FormMain : Form
                     if (this.Connection is not null)
                     {
                         DMARCReportAnalyzer.Database.Database database = new DMARCReportAnalyzer.Database.Database(Connection);
-                        database.InitializeDatabase();
+                        
+                        if (!database.InitializeDatabase())
+                        {
+                            MessageBox.Show(this, "The database couldn't be initialized.", this.Text, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                            return;
+                        }
                     }
                 }
                 else
