@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS filename (
   unique_id VARCHAR(255) NULL,
   name VARCHAR(255) NOT NULL,
   PRIMARY KEY (feedback_id),
-  FOREIGN KEY (feedback_id) REFERENCES feedback(id)  
+  FOREIGN KEY (feedback_id) REFERENCES feedback(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS metadata (
@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS metadata (
   errors VARCHAR(255) NULL,
   generator VARCHAR(255) NULL,
   PRIMARY KEY (feedback_id),
-  FOREIGN KEY (feedback_id) REFERENCES feedback(id)
+  FOREIGN KEY (feedback_id) REFERENCES feedback(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS policy_published (
@@ -48,7 +48,7 @@ CREATE TABLE IF NOT EXISTS policy_published (
   fo VARCHAR(255) NULL,
   testing VARCHAR(1) NULL,
   PRIMARY KEY (feedback_id),
-  FOREIGN KEY (feedback_id) REFERENCES feedback(id)
+  FOREIGN KEY (feedback_id) REFERENCES feedback(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS record (
@@ -60,7 +60,7 @@ CREATE TABLE IF NOT EXISTS record (
   envelope_from VARCHAR(255) NULL,
   header_from VARCHAR(255) NOT NULL,
   PRIMARY KEY (id),
-  FOREIGN KEY (feedback_id) REFERENCES feedback(id)
+  FOREIGN KEY (feedback_id) REFERENCES feedback(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS policy_evaluated (
@@ -68,14 +68,14 @@ CREATE TABLE IF NOT EXISTS policy_evaluated (
   disposition VARCHAR(10) NOT NULL,
   dkim VARCHAR(4) NOT NULL,
   spf VARCHAR(4) NOT NULL,
-  FOREIGN KEY (record_id) REFERENCES record(id)
+  FOREIGN KEY (record_id) REFERENCES record(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS reason (
   record_id VARCHAR(32) NOT NULL,
   type VARCHAR(17) NOT NULL,
   comment VARCHAR(255) NULL,
-  FOREIGN KEY (record_id) REFERENCES record(id)
+  FOREIGN KEY (record_id) REFERENCES record(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS auth_result_dkim (
@@ -84,7 +84,7 @@ CREATE TABLE IF NOT EXISTS auth_result_dkim (
   selector VARCHAR(255) NULL,
   result VARCHAR(9) NOT NULL,
   human_result VARCHAR(255) NULL,
-  FOREIGN KEY (record_id) REFERENCES record(id)
+  FOREIGN KEY (record_id) REFERENCES record(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS auth_result_spf (
@@ -93,7 +93,7 @@ CREATE TABLE IF NOT EXISTS auth_result_spf (
   scope VARCHAR(5) NULL,
   result VARCHAR(9) NOT NULL,
   human_result VARCHAR(255) NULL,
-  FOREIGN KEY (record_id) REFERENCES record(id)
+  FOREIGN KEY (record_id) REFERENCES record(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS mailbox (

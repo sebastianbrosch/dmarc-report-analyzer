@@ -68,6 +68,8 @@ public partial class FormMain : Form
         Connection = new SQLiteConnection(builder.ConnectionString);
         Connection.Open();
 
+        Connection.Execute("PRAGMA foreign_keys = ON;");
+
         return true;
     }
 
@@ -512,6 +514,7 @@ public partial class FormMain : Form
         {
             frmReports.StartPosition = FormStartPosition.CenterParent;
             frmReports.ShowDialog(this);
+            LoadDatabase();
         }
     }
 

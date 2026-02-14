@@ -68,18 +68,14 @@ public partial class FormReports : Form
         if (listSelectedRows.Count == 1)
         {
             string? reportId = listSelectedRows[0].Cells[dgvReportsOverview_ID.Index]!.Value!.ToString();
-            var data = DbConnection.QueryFirstOrDefault("SELECT f.id, m.report_begin, m.report_end, f.data, pp.domain FROM metadata m INNER JOIN feedback f ON m.feedback_id = f.id INNER JOIN policy_published pp ON pp.feedback_id = f.id");
+            var data = DbConnection.QueryFirstOrDefault("SELECT fn.name, fb.data FROM feedback fb INNER JOIN filename fn ON fb.id = fn.feedback_id WHERE fb.id = @Id", new { Id = reportId });
 
             if (data is null)
             {
                 return;
             }
 
-            DateTimeOffset offsetBegin = new DateTimeOffset(data.report_begin, TimeSpan.Zero);
-            DateTimeOffset offsetEnd = new DateTimeOffset(data.report_end, TimeSpan.Zero);
-            
-            string filename = data.domain + "!" + offsetBegin.ToUnixTimeSeconds() + "!" + offsetEnd.ToUnixTimeSeconds() + "!" + data.id + ".xml";
-            
+            string filename = data.name + ".xml";
             string filePath = string.Empty;
 
             using (SaveFileDialog dlgSelectFile = new())
@@ -115,5 +111,18 @@ public partial class FormReports : Form
 
             MessageBox.Show(this, "The XML document was created successfully.", this.Text, MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
+    }
+
+    private void deleteToolStripMenuItem_Click(object sender, EventArgs e)
+    {
+        DataGridViewSelectedRowCollection listSelectedRows = dgvReportsOverview.SelectedRows;
+
+        foreach (DataGridViewRow dgvSelectedRow in listSelectedRows)
+        {
+            string? reportId = dgvSelectedRow.Cells[dgvReportsOverview_ID.Index]!.Value!.ToString();
+            DbConnection.Execute("DELETE FROM feedback WHERE id = @Id", new { Id = reportId });
+        }
+
+        LoadReports();
     }
 }

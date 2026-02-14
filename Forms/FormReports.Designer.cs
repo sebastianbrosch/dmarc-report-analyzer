@@ -39,6 +39,9 @@ namespace DMARCReportAnalyzer
             dgvReportsOverview_ReportEnd = new DataGridViewTextBoxColumn();
             dgvReportsOverview_Organization = new DataGridViewTextBoxColumn();
             dgvReportsOverview_MessageCount = new DataGridViewTextBoxColumn();
+            ctxReports = new ContextMenuStrip(components);
+            exportXMLToolStripMenuItem = new ToolStripMenuItem();
+            deleteToolStripMenuItem = new ToolStripMenuItem();
             grpReportDetails = new GroupBox();
             lblExtraInfo = new Label();
             txtExtraInfo = new TextBox();
@@ -66,12 +69,10 @@ namespace DMARCReportAnalyzer
             lblSPFAlignment = new Label();
             lblDKIMAlignment = new Label();
             txtDKIMAlignment = new TextBox();
-            ctxReports = new ContextMenuStrip(components);
-            exportXMLToolStripMenuItem = new ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)dgvReportsOverview).BeginInit();
+            ctxReports.SuspendLayout();
             grpReportDetails.SuspendLayout();
             grpPublishedPolicy.SuspendLayout();
-            ctxReports.SuspendLayout();
             SuspendLayout();
             // 
             // dgvReportsOverview
@@ -148,6 +149,26 @@ namespace DMARCReportAnalyzer
             dgvReportsOverview_MessageCount.Name = "dgvReportsOverview_MessageCount";
             dgvReportsOverview_MessageCount.ReadOnly = true;
             dgvReportsOverview_MessageCount.Width = 120;
+            // 
+            // ctxReports
+            // 
+            ctxReports.Items.AddRange(new ToolStripItem[] { exportXMLToolStripMenuItem, deleteToolStripMenuItem });
+            ctxReports.Name = "ctxReports";
+            ctxReports.Size = new Size(181, 70);
+            // 
+            // exportXMLToolStripMenuItem
+            // 
+            exportXMLToolStripMenuItem.Name = "exportXMLToolStripMenuItem";
+            exportXMLToolStripMenuItem.Size = new Size(180, 22);
+            exportXMLToolStripMenuItem.Text = "Export XML";
+            exportXMLToolStripMenuItem.Click += exportXMLToolStripMenuItem_Click;
+            // 
+            // deleteToolStripMenuItem
+            // 
+            deleteToolStripMenuItem.Name = "deleteToolStripMenuItem";
+            deleteToolStripMenuItem.Size = new Size(180, 22);
+            deleteToolStripMenuItem.Text = "Delete";
+            deleteToolStripMenuItem.Click += deleteToolStripMenuItem_Click;
             // 
             // grpReportDetails
             // 
@@ -391,19 +412,6 @@ namespace DMARCReportAnalyzer
             txtDKIMAlignment.Size = new Size(173, 23);
             txtDKIMAlignment.TabIndex = 0;
             // 
-            // ctxReports
-            // 
-            ctxReports.Items.AddRange(new ToolStripItem[] { exportXMLToolStripMenuItem });
-            ctxReports.Name = "ctxReports";
-            ctxReports.Size = new Size(135, 26);
-            // 
-            // exportXMLToolStripMenuItem
-            // 
-            exportXMLToolStripMenuItem.Name = "exportXMLToolStripMenuItem";
-            exportXMLToolStripMenuItem.Size = new Size(134, 22);
-            exportXMLToolStripMenuItem.Text = "Export XML";
-            exportXMLToolStripMenuItem.Click += exportXMLToolStripMenuItem_Click;
-            // 
             // FormReports
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
@@ -417,11 +425,11 @@ namespace DMARCReportAnalyzer
             Name = "FormReports";
             Text = "DMARC Reports";
             ((System.ComponentModel.ISupportInitialize)dgvReportsOverview).EndInit();
+            ctxReports.ResumeLayout(false);
             grpReportDetails.ResumeLayout(false);
             grpReportDetails.PerformLayout();
             grpPublishedPolicy.ResumeLayout(false);
             grpPublishedPolicy.PerformLayout();
-            ctxReports.ResumeLayout(false);
             ResumeLayout(false);
         }
 
@@ -462,5 +470,7 @@ namespace DMARCReportAnalyzer
         private TextBox txtDiscoveryMethod;
         private ContextMenuStrip ctxReports;
         private ToolStripMenuItem exportXMLToolStripMenuItem;
+        private ToolStripMenuItem toolStripMenuItem1;
+        private ToolStripMenuItem deleteToolStripMenuItem;
     }
 }
