@@ -91,6 +91,32 @@ public class Storage(IDbConnection connection) : DMARC.Storage(connection)
     }
 
     /// <summary>
+    /// Saves a DMARC filename to the database.
+    /// </summary>
+    /// <param name="feedbackId">The ID of the feedback.</param>
+    /// <param name="fileName">The filename of the DMARC report.</param>
+    /// <returns>Status whether the DMARC filename object was successfully saved to the database.</returns>
+    private bool SaveFileName(string feedbackId, FileName fileName)
+    {
+        if (fileName is null)
+        {
+            return false;
+        }
+
+        Database.CreateFileName(new DMARCReportAnalyzer.Database.DTO.FileName(
+            feedbackId,
+            fileName.Receiver,
+            fileName.Domain,
+            fileName.Begin,
+            fileName.End,
+            fileName.UniqueId,
+            fileName.ToString()
+        ));
+
+        return true;
+    }
+
+    /// <summary>
     /// Saves the metadata of the DMARC report to the database.
     /// </summary>
     /// <param name="feedbackId">The ID of the feedback.</param>
@@ -254,10 +280,17 @@ public class Storage(IDbConnection connection) : DMARC.Storage(connection)
         Schema.Feedback feedback = (Schema.Feedback)report.Feedback;
         XmlDocument documentXml = report.Document;
         MimeKit.MimeMessage? message = report.Message;
+        FileName fileName = report.FileName;
 
         using IDbTransaction transaction = Connection.BeginTransaction();
 
         if (!SaveFeedback(feedbackId, feedback, documentXml, message))
+        {
+            transaction.Rollback();
+            return false;
+        }
+
+        if (!SaveFileName(feedbackId, fileName))
         {
             transaction.Rollback();
             return false;

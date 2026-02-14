@@ -16,6 +16,11 @@ public struct Report
     public IFeedback Feedback;
 
     /// <summary>
+    /// The filename of the DMARC report.
+    /// </summary>
+    public FileName FileName;
+
+    /// <summary>
     /// The email message with which the DMARC report was received.
     /// </summary>
     public MimeKit.MimeMessage? Message;

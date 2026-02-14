@@ -29,6 +29,15 @@ public class Database
     }
 
     /// <summary>
+    /// Inserts a filename record into the database.
+    /// </summary>
+    /// <param name="fileName">An object containing the filename data to be inserted.</param>
+    public void CreateFileName(DTO.FileName fileName)
+    {
+        this.DbConnection.Execute("INSERT INTO filename (feedback_id, receiver, domain, report_begin, report_end, unique_id, name) VALUES (@FeedbackId, @Receiver, @Domain, @ReportBegin, @ReportEnd, @UniqueId, @Name)", fileName);
+    }
+
+    /// <summary>
     /// Inserts a feedback record into the database.
     /// </summary>
     /// <param name="feedback">An object containing the feedback data to be inserted.</param>

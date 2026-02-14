@@ -9,13 +9,14 @@ CREATE TABLE IF NOT EXISTS feedback (
   PRIMARY KEY (id)
 );
 
-CREATE TABLE IF NOT EXISTS file (
+CREATE TABLE IF NOT EXISTS filename (
   feedback_id VARCHAR(32) NOT NULL,
   receiver VARCHAR(255) NOT NULL,
   domain VARCHAR(255) NOT NULL,
   report_begin DATETIME NOT NULL,
   report_end DATETIME NOT NULL,
   unique_id VARCHAR(255) NULL,
+  name VARCHAR(255) NOT NULL,
   PRIMARY KEY (feedback_id),
   FOREIGN KEY (feedback_id) REFERENCES feedback(id)  
 );

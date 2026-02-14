@@ -533,11 +533,9 @@ public partial class FormMain : Form
         using (FolderBrowserDialog dlgSelectFolder = new FolderBrowserDialog())
         {
             dlgSelectFolder.Description = "Speicherort für XML-Dokumente";
-            dlgSelectFolder.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
             dlgSelectFolder.Multiselect = false;
             dlgSelectFolder.ShowHiddenFiles = false;
             dlgSelectFolder.ShowNewFolderButton = true;
-            dlgSelectFolder.ShowPinnedPlaces = false;
             dlgSelectFolder.UseDescriptionForTitle = true;
 
             if (dlgSelectFolder.ShowDialog(this) == DialogResult.OK)
@@ -552,16 +550,17 @@ public partial class FormMain : Form
             return;
         }
 
-        List<string> txtFiles = [.. Directory.EnumerateFiles(importFolder, "*.xml", SearchOption.TopDirectoryOnly)];
+        List<string> xmlFiles = [.. Directory.EnumerateFiles(importFolder, "*.xml", SearchOption.TopDirectoryOnly)];
 
-        foreach (string currentFile in txtFiles)
+        foreach (string currentFile in xmlFiles)
         {
             XmlDocument document = new XmlDocument();
             document.Load(currentFile);
+            FileName? fileName = FileName.Create(currentFile);
 
             IFeedback? feedback = FeedbackFactory.Create(document);
 
-            if (feedback is null)
+            if (fileName is null || feedback is null)
             {
                 continue;
             }
@@ -573,7 +572,7 @@ public partial class FormMain : Form
                 continue;
             }
 
-            Report report = new Report { Document = document, Message = null, Feedback = feedback };
+            Report report = new() { Document = document, Message = null, Feedback = feedback, FileName = fileName };
 
             if (storage.Exists(report))
             {
@@ -603,7 +602,6 @@ public partial class FormMain : Form
             dlgSelectFolder.Multiselect = false;
             dlgSelectFolder.ShowHiddenFiles = false;
             dlgSelectFolder.ShowNewFolderButton = true;
-            dlgSelectFolder.ShowPinnedPlaces = false;
             dlgSelectFolder.UseDescriptionForTitle = true;
 
             if (dlgSelectFolder.ShowDialog(this) == DialogResult.OK)
@@ -618,11 +616,16 @@ public partial class FormMain : Form
             return;
         }
 
-        var documents = Connection.Query("SELECT id, data FROM feedback");
+        var documents = Connection.Query("SELECT fn.name, fb.data FROM feedback fb INNER JOIN filename fn ON fb.id = fn.feedback_id");
 
         foreach (var document in documents)
         {
-            string exportFilePath = Path.Combine(exportFolder, document.id + ".xml");
+            if (string.IsNullOrWhiteSpace(document.name))
+            {
+                continue;
+            }
+
+            string exportFilePath = Path.Combine(exportFolder, document.name + ".xml");
             XmlDocument documentXml = new XmlDocument();
             documentXml.LoadXml(document.data);
             documentXml.Save(exportFilePath);

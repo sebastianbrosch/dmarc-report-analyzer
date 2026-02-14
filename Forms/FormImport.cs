@@ -203,6 +203,21 @@ public partial class FormImport : Form
     }
 
     /// <summary>
+    /// Removes a list of files.
+    /// </summary>
+    /// <param name="filePaths">A list with file paths to be deleted.</param>
+    private void DeleteFiles(List<string> filePaths)
+    {
+        foreach (string filePath in filePaths)
+        {
+            if (File.Exists(filePath))
+            {
+                File.Delete(filePath);
+            }
+        }
+    }
+
+    /// <summary>
     /// Imports all DMARC reports from IMAP mailbox.
     /// </summary>
     /// <returns>The status whether the import of DMARC reports was successful.</returns>
@@ -339,108 +354,113 @@ public partial class FormImport : Form
 
             List<string> reportPaths = GetReportsFromMessage(message);
 
+            Log.Information("Current message: {@message}", new { message.Subject, message.Date, message.MessageId });
+            Log.Information("Count of archive files with DMARC report: {count}", reportPaths.Count);
+
             if (reportPaths.Count == 0)
             {
                 Log.Information("No archive file with DMARC report found.");
                 continue;
             }
-
-            Log.Information("Current message: {@message}", new { message.Subject, message.Date, message.MessageId });
-            Log.Information("Count of archive files with DMARC report: {count}", reportPaths.Count);
-            cleanupFiles.AddRange(reportPaths);
-
-            foreach (string reportPath in reportPaths)
+            else if (reportPaths.Count > 1)
             {
-                if (!File.Exists(reportPath))
+                DeleteFiles(reportPaths);
+                Log.Information("There is more than one DMARC report available.");
+                continue;
+            }
+
+            string reportPath = reportPaths.First<string>();
+            cleanupFiles.AddRange(reportPath);
+
+            if (string.IsNullOrWhiteSpace(reportPath) || !File.Exists(reportPath))
+            {
+                Log.Error("Archive file not found: {path}", reportPath);
+                continue;
+            }
+
+            Log.Information("Current archive file: {path}", reportPath);
+
+            DecompressReportContext decompressContext = new();
+
+            switch (Path.GetExtension(reportPath).ToLower())
+            {
+                case ".gz":
+                    decompressContext.SetStrategy(new DecompressReportGZIP());
+                    break;
+                case ".zip":
+                    decompressContext.SetStrategy(new DecompressReportZIP());
+                    break;
+                default:
+                    Log.Warning("Unknown file extension: {extension}", Path.GetExtension(reportPath).ToLower());
+                    continue;
+            }
+
+            string filePathXml = decompressContext.Decompress(reportPath);
+            Log.Information("Current DMARC report: {path}", filePathXml);
+            cleanupFiles.Add(filePathXml);
+
+            using (FileStream fileStreamXml = new(filePathXml, FileMode.Open))
+            {
+                XmlDocument documentXml = new();
+                documentXml.Load(fileStreamXml);
+                FileName? fileName = FileName.Create(reportPath);
+                IFeedback? feedback = FeedbackFactory.Create(documentXml);
+
+                if (fileName is null)
                 {
-                    Log.Error("Archive file not found: {path}", reportPath);
+                    Log.Error("File name could not be parsed.");
+                    hasErrors = true;
                     continue;
                 }
 
-                Log.Information("Current archive file: {path}", reportPath);
-
-                DecompressReportContext decompressContext = new();
-
-                switch (Path.GetExtension(reportPath).ToLower())
+                if (feedback is null)
                 {
-                    case ".gz":
-                        decompressContext.SetStrategy(new DecompressReportGZIP());
-                        break;
-                    case ".zip":
-                        decompressContext.SetStrategy(new DecompressReportZIP());
-                        break;
-                    default:
-                        Log.Warning("Unknown file extension: {extension}", Path.GetExtension(reportPath).ToLower());
-                        continue;
+                    Log.Error("Feedback from the DMARC report could not be found.");
+                    hasErrors = true;
+                    continue;
                 }
 
-                string filePathXml = decompressContext.Decompress(reportPath);
-                Log.Information("Current DMARC report: {path}", filePathXml);
-                cleanupFiles.Add(filePathXml);
+                IStorage? storage = StorageFactory.Create(feedback, Connection);
 
-                using (FileStream fileStreamXml = new(filePathXml, FileMode.Open))
+                if (storage is null)
                 {
-                    XmlDocument documentXml = new();
-                    documentXml.Load(fileStreamXml);
+                    Log.Error("The storage location for the DMARC report feedback could not be determined.");
+                    hasErrors = true;
+                    continue;
+                }
 
-                    IFeedback? feedback = FeedbackFactory.Create(documentXml);
+                Report report = new() { Document = documentXml, Message = message, Feedback = feedback, FileName = fileName };
 
-                    if (feedback is null)
+                if (storage.Exists(report))
+                {
+                    if (storage.Exists(report, true))
                     {
-                        Log.Error("Feedback from the DMARC report could not be found.");
-                        hasErrors = true;
+                        Log.Information("DMARC report already exists in database.");
                         continue;
-                    }
-
-                    IStorage? storage = StorageFactory.Create(feedback, Connection);
-
-                    if (storage is null)
-                    {
-                        Log.Error("The storage location for the DMARC report feedback could not be determined.");
-                        hasErrors = true;
-                        continue;
-                    }
-
-                    Report report = new Report { Document = documentXml, Message = message, Feedback = feedback };
-
-                    if (storage.Exists(report))
-                    {
-                        if (storage.Exists(report, true))
-                        {
-                            Log.Information("DMARC report already exists in database.");
-                            continue;
-                        }
-                        else
-                        {
-                            Log.Warning("DMARC report already exists in database, but with different information.");
-                            hasErrors = true;
-                            continue;
-                        }
-                    }
-
-                    if (storage.Save(report))
-                    {
-                        cntNewReports++;
-                        Log.Information("DMARC report has been successfully saved to the database.");
                     }
                     else
                     {
-                        Log.Error("DMARC report could not be saved to the database.");
+                        Log.Warning("DMARC report already exists in database, but with different information.");
                         hasErrors = true;
                         continue;
                     }
                 }
-            }
 
-            Log.Information("Delete temporary files.");
-
-            foreach (string cleanupFile in cleanupFiles)
-            {
-                if (File.Exists(cleanupFile))
+                if (storage.Save(report))
                 {
-                    File.Delete(cleanupFile);
+                    cntNewReports++;
+                    Log.Information("DMARC report has been successfully saved to the database.");
+                }
+                else
+                {
+                    Log.Error("DMARC report could not be saved to the database.");
+                    hasErrors = true;
+                    continue;
                 }
             }
+            
+            Log.Information("Delete temporary files.");
+            DeleteFiles(cleanupFiles);
 
             if (!hasErrors)
             {
@@ -494,21 +514,9 @@ public partial class FormImport : Form
 
         foreach (MimePart attachment in message.Attachments)
         {
-            if (attachment.ContentType.IsMimeType("application", "gzip"))
+            if (attachment.ContentType.IsMimeType("application", "gzip") || attachment.ContentType.IsMimeType("application", "zip"))
             {
-                string reportFilePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName() + ".gz");
-                Directory.CreateDirectory(Path.GetDirectoryName(reportFilePath)!);
-
-                using (FileStream reportFileStream = File.Create(reportFilePath))
-                {
-                    attachment.Content.DecodeTo(reportFileStream);
-                }
-
-                reports.Add(reportFilePath);
-            }
-            else if (attachment.ContentType.IsMimeType("application", "zip"))
-            {
-                string reportFilePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName() + ".zip");
+                string reportFilePath = Path.Combine(Path.GetTempPath(), attachment.FileName);
                 Directory.CreateDirectory(Path.GetDirectoryName(reportFilePath)!);
 
                 using (FileStream reportFileStream = File.Create(reportFilePath))
